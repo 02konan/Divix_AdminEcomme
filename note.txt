@@ -1,0 +1,12 @@
+${banner.description ? `<p class="card-text small text-muted mb-2" title="${escapeHtml(banner.description)}">${banner.description.length > 60 ? banner.description.substring(0, 60) + '...' : banner.description}</p>` : `<p class="card-text small text-muted mb-2" title="">-</p>`}
+
+<div class="d-flex flex-column gap-1 small">
+    ${banner.date_debut ? `<div><span class="text-muted">Début:</span> <strong>${new Date(banner.date_debut).toLocaleDateString('fr-FR')}</strong></div>` : ''}
+    ${banner.date_fin ? `<div><span class="text-muted">Fin:</span> <strong>${new Date(banner.date_fin).toLocaleDateString('fr-FR')}</strong></div>` : ''}
+</div>
+
+// btn pour effacer image produit
+
+<button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 delete-image-btn" data-image-id="${image.id}" data-produit-id="${produit.id}" title="Supprimer cette image">
+    <i class='bx bx-trash'></i>
+</button>
