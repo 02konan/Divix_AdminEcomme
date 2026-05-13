@@ -687,7 +687,7 @@ table thead th{
 /* Image */
 .product-img {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    height: 150px;
     object-fit: cover;
 }
 
@@ -920,25 +920,6 @@ table thead th{
 }
 #offcanvasDetailsCommandes .details-produit-tale{
     width: 200px;
-}
-/* Style pour la gestion des images */
-#existingImagesContainer .card {
-    transition: transform 0.2s;
-}
-
-#existingImagesContainer .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-#existingImagesContainer .delete-existing-image {
-    opacity: 0.8;
-    transition: opacity 0.2s;
-}
-
-#existingImagesContainer .delete-existing-image:hover {
-    opacity: 1;
-    transform: scale(1.05);
 }
 @media (max-width: 1500px) {
     .navbar-center { position: static; transform: none; }

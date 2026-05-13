@@ -197,6 +197,26 @@ function setRange(r, btn) {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         buildBar('7j');
+        const audio = document.getElementById('notificationSound');
+        if (audio) {
+            audio.volume = 1;
+            audio.load();
+
+            const unlockAudio = () => {
+                audio.muted = true;
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.muted = false;
+                    console.info('Notification audio déverrouillée');
+                }).catch(error => {
+                    audio.muted = false;
+                    console.warn('Impossible de déverrouiller le son de notification :', error);
+                });
+            };
+            document.addEventListener('click', unlockAudio, { once: true });
+            document.addEventListener('keydown', unlockAudio, { once: true });
+        }
     });
 } else {
     buildBar('7j');
@@ -223,5 +243,60 @@ document.getElementById('logoutBtn').addEventListener('click', function (e) {
         console.error('Erreur réseau:', error);
     });
 });
+
+
+let isPlaying = false;
+
+function playNotificationSound() {
+    const audio = document.getElementById('notificationSound');
+    if (!audio || isPlaying) return;
+
+    isPlaying = true;
+    audio.currentTime = 0;
+    audio.muted = false;
+    audio.play().catch(error => {
+        console.warn('Notification audio bloquée :', error);
+        isPlaying = false;
+    });
+
+    audio.onended = () => {
+        isPlaying = false; 
+    };
+}
+
+let previousCommandCount = null;
+
+setInterval(() => {
+    const formData = new FormData();
+    formData.append('action', 'getNumberCommandes');
+    // Supprimé le paramètre page pour charger tous les produits
+
+    fetch('./api/commandes.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            
+           const badgeNewCommandes = document.getElementById('new_commandes')
+           const currentCount = data.number;
+           
+            if (badgeNewCommandes) {
+                badgeNewCommandes.textContent = data.number
+            }
+
+            if (previousCommandCount !== null && currentCount !== previousCommandCount && currentCount > previousCommandCount) {
+                playNotificationSound();
+            }
+
+            previousCommandCount = currentCount;
+
+        } else {
+            console.warn('Polling commandes : réponse non succès', data);
+        }
+    })
+    .catch(error => console.error('Erreur lors du polling des commandes:', error));
+}, 2000);
 
 

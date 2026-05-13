@@ -10,18 +10,20 @@ document.addEventListener("DOMContentLoaded", () => {
     initProduitDetailsOffcanvas();
     initOffcanvasImageDeletion();
     
+    // Cacher la pagination flottante au départ
     const floatPag = document.getElementById("floatPag");
     if (floatPag) {
         floatPag.style.display = 'none';
     }
 });
-
 const toastEl = document.getElementById('loginToast');
 
+// Variables globales pour la pagination
 let allProduits = [];
 let currentPage = 1;
-const itemsPerPage = 16;
+const itemsPerPage = 16; // Nombre de produits par page
 
+// Afficher les alertes
 function showAlert(type, message) {
     if (!toastEl) return;
 
@@ -34,24 +36,25 @@ function showAlert(type, message) {
     toastInstance.show();
 }
 
-const inputStock = document.getElementById("produitStock");
-const inputSeuil = document.getElementById("produitStockMin");
+// STATUT FORMULAIRE
 
-if (inputStock && inputSeuil) {
-    verifyStock(inputStock.value, inputSeuil.value, "produitStatut");
-
+const inputStock = document.getElementById("produitStock")
+const inputSeuil = document.getElementById("produitStockMin")
+if (inputStock) {
     inputStock.addEventListener('input', () => {
-        verifyStock(inputStock.value, inputSeuil.value, "produitStatut");
-    });
-
+        verifyStock(inputStock.value, inputSeuil.value, "produitStatut")
+    })
+    
+}
+if (inputSeuil) {
     inputSeuil.addEventListener('input', () => {
-        verifyStock(inputStock.value, inputSeuil.value, "produitStatut");
-    });
+        verifyStock(inputStock.value, inputSeuil.value, "produitStatut")
+    })
 }
 
 function verifyStock(stock, seuil, selectID) {
-    stock = Number(stock) || 0;
-    seuil = Number(seuil) || 0;
+    stock = Number(stock) || 0  // ✅ conversion en nombre
+    seuil = Number(seuil) || 0  // ✅ corrigé
 
     if (stock <= 0) {
         document.getElementById(selectID).value = "Rupture";
@@ -62,6 +65,8 @@ function verifyStock(stock, seuil, selectID) {
     }
 }
 
+// Fonction pour initialiser les datalists de produits
+
 function initProduitDatalists() {
     const categorieInput = document.getElementById('produitCategorieLabel');
     const sousCategorieInput = document.getElementById('produitSousCategorieLabel');
@@ -71,18 +76,6 @@ function initProduitDatalists() {
             syncDatalistId('produitCategorieLabel', 'produitCategorieId', 'list-categorie');
             const categoryId = document.getElementById('produitCategorieId').value;
             if (categoryId) {
-                clearSousCategorie();
-                await loadSousCategories(categoryId);
-            } else {
-                clearSousCategorie();
-            }
-        });
-        
-        categorieInput.addEventListener('change', async () => {
-            syncDatalistId('produitCategorieLabel', 'produitCategorieId', 'list-categorie');
-            const categoryId = document.getElementById('produitCategorieId').value;
-            if (categoryId) {
-                clearSousCategorie();
                 await loadSousCategories(categoryId);
             } else {
                 clearSousCategorie();
@@ -124,22 +117,9 @@ function clearSousCategorie() {
     const sousCategorieInput = document.getElementById('produitSousCategorieLabel');
     const sousCategorieHidden = document.getElementById('produitSousCategorieId');
     const listSousCategorie = document.getElementById('list-sous-categorie');
-    
-    if (sousCategorieInput) {
-        sousCategorieInput.value = '';
-        sousCategorieInput.disabled = true;
-        setTimeout(() => {
-            if (sousCategorieInput) sousCategorieInput.disabled = false;
-        }, 100);
-    }
+    if (sousCategorieInput) sousCategorieInput.value = '';
     if (sousCategorieHidden) sousCategorieHidden.value = '';
-    if (listSousCategorie) {
-        listSousCategorie.innerHTML = '';
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = '-- Aucune sous-catégorie disponible --';
-        listSousCategorie.appendChild(defaultOption);
-    }
+    if (listSousCategorie) listSousCategorie.innerHTML = '';
 }
 
 function escapeHtml(value) {
@@ -183,14 +163,9 @@ async function loadProduitCategories() {
 
 async function loadSousCategories(categoryId) {
     const listSousCategorie = document.getElementById('list-sous-categorie');
-    const sousCategorieInput = document.getElementById('produitSousCategorieLabel');
     if (!listSousCategorie) return;
 
     listSousCategorie.innerHTML = '';
-    if (sousCategorieInput) {
-        sousCategorieInput.placeholder = 'Chargement...';
-        sousCategorieInput.disabled = true;
-    }
 
     const formData = new FormData();
     formData.append('action', 'getSousCategories');
@@ -203,62 +178,24 @@ async function loadSousCategories(categoryId) {
         });
         const data = await response.json();
 
-        if (data.success && data.sous_categories && data.sous_categories.length > 0) {
+        if (data.success) {
             fillDatalist(listSousCategorie, data.sous_categories || []);
-            if (sousCategorieInput) {
-                sousCategorieInput.placeholder = '--choisir--';
-                sousCategorieInput.disabled = false;
-            }
-        } else {
-            const emptyOption = document.createElement('option');
-            emptyOption.value = '';
-            emptyOption.textContent = '-- Aucune sous-catégorie disponible --';
-            listSousCategorie.appendChild(emptyOption);
-            if (sousCategorieInput) {
-                sousCategorieInput.placeholder = 'Aucune sous-catégorie';
-                sousCategorieInput.value = '';
-                sousCategorieInput.disabled = false;
-            }
+            syncDatalistId('produitSousCategorieLabel', 'produitSousCategorieId', 'list-sous-categorie');
         }
-        
-        syncDatalistId('produitSousCategorieLabel', 'produitSousCategorieId', 'list-sous-categorie');
-        
     } catch (error) {
         console.error('Erreur chargement sous-catégories :', error);
-        const errorOption = document.createElement('option');
-        errorOption.value = '';
-        errorOption.textContent = '-- Erreur de chargement --';
-        listSousCategorie.appendChild(errorOption);
-        if (sousCategorieInput) {
-            sousCategorieInput.placeholder = 'Erreur de chargement';
-            sousCategorieInput.disabled = false;
-        }
     }
 }
 
 function fillDatalist(list, items) {
-    if (!list) return;
-    
-    list.innerHTML = '';
-    
-    if (!items || items.length === 0) {
-        const emptyOption = document.createElement('option');
-        emptyOption.value = '';
-        emptyOption.textContent = '-- Aucune option disponible --';
-        list.appendChild(emptyOption);
-        return;
-    }
-    
-    items.forEach(item => {
+    list.innerHTML = items.map(item => {
         const label = escapeHtml(item.nom || item.name || '');
         const id = escapeHtml(item.id || item.value || '');
-        const option = document.createElement('option');
-        option.value = label;
-        option.dataset.id = id;
-        list.appendChild(option);
-    });
+        return `<option value="${label}" data-id="${id}"></option>`;
+    }).join('');
 }
 
+// Fonction pour afficher le spinner dots
 function showDotsSpinner(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -277,6 +214,7 @@ function showDotsSpinner(containerId) {
     }
 }
 
+// Version avec skeleton
 function showCounterSkeletonProduits() {
     const counters = ["counterstock_faible", "counteren_rupture", "countertotal_produits"];
     counters.forEach(id => {
@@ -303,6 +241,7 @@ function Produits() {
 
     const formData = new FormData();
     formData.append('action', 'getProduits');
+    // Supprimé le paramètre page pour charger tous les produits
 
     fetch('./api/produits.php', {
         method: 'POST',
@@ -312,13 +251,15 @@ function Produits() {
     .then(data => {
         hideCounterSkeletonProduits();
         if (data.success) {
-            allProduits = data.data || [];
-            currentPage = 1;
-            afficheproduitsPage(currentPage);
-            renderPagination();
+            allProduits = data.data || []; // Stocker tous les produits
+            currentPage = 1; // Réinitialiser à la première page
+            afficheproduitsPage(currentPage); // Afficher la première page
+            renderPagination(); // Générer les contrôles de pagination
+            
             updateCountersProduits(data.counter);
+           
         } else {
-            const msg = data.error || data.message || 'Une erreur est survenu';
+            const msg = data.error || data.message || 'Une erreur est survenu'
             showAlert('error', msg);
         }
     })
@@ -331,6 +272,7 @@ function Produits() {
             text: error,
             confirmButtonColor: '#3d6dff'
         });
+        
     });
 }
 
@@ -390,7 +332,7 @@ function afficheproduits(produits) {
             `;
             container.appendChild(item);
         });
-    } else {
+    }else{
         container.innerHTML = `
             <div class="col-12 text-center py-5 nothing">
                 <div class="text-center">
@@ -400,8 +342,10 @@ function afficheproduits(produits) {
             </div>
         `;
     }
+
 }
 
+// Fonction pour afficher une page spécifique
 function afficheproduitsPage(page) {
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -409,12 +353,14 @@ function afficheproduitsPage(page) {
     afficheproduits(produitsPage);
 }
 
+// Fonction pour générer les contrôles de pagination
 function renderPagination() {
     const totalPages = Math.ceil(allProduits.length / itemsPerPage);
     const floatPag = document.getElementById("floatPag");
 
     if (!floatPag) return;
 
+    // Cacher la pagination si une seule page
     if (totalPages <= 1) {
         floatPag.style.display = 'none';
         return;
@@ -422,6 +368,7 @@ function renderPagination() {
 
     floatPag.style.display = 'flex';
 
+    // Mettre à jour les boutons précédent/suivant
     const btnPrev = document.getElementById("btnPrev");
     const btnNext = document.getElementById("btnNext");
 
@@ -435,15 +382,18 @@ function renderPagination() {
         btnNext.onclick = () => changePage(currentPage + 1);
     }
 
+    // Mettre à jour les numéros de page
     const pgNums = document.getElementById("pgNums");
     if (!pgNums) return;
 
     let numsHTML = '';
 
+    // Calculer la plage de pages à afficher (max 4 boutons)
     const maxButtons = 4;
     let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
     let endPage = Math.min(totalPages, startPage + maxButtons - 1);
 
+    // Ajuster si on est près du début
     if (endPage - startPage + 1 < maxButtons) {
         startPage = Math.max(1, endPage - maxButtons + 1);
     }
@@ -456,6 +406,7 @@ function renderPagination() {
     pgNums.innerHTML = numsHTML;
 }
 
+// Fonction pour changer de page
 function changePage(page) {
     if (page < 1 || page > Math.ceil(allProduits.length / itemsPerPage)) return;
     currentPage = page;
@@ -577,21 +528,11 @@ async function supprimerProduitImage(imageId) {
 
 function populateOffcanvasDetails(data) {
     const produit = data.produit;
-    const editProduitBtn = document.getElementById('editProduitBtn');
     const statutClassProduit = produit.statut === 'En stock' ? 'active' : produit.statut === 'St. faible' ? 'pending' : 'disabled';
     const images = Array.isArray(data.images) ? data.images : [];
     const titleEl = document.getElementById('offcanvasRightLabel');
     const badgeEl = document.getElementById('offcanvasDetailsStatusBadge');
     const bodyEl = document.getElementById('offcanvasDetailsBody');
-
-    if (editProduitBtn) {
-        editProduitBtn.dataset.editId = produit.id;
-        const newEditBtn = editProduitBtn.cloneNode(true);
-        editProduitBtn.parentNode.replaceChild(newEditBtn, editProduitBtn);
-        newEditBtn.addEventListener('click', () => {
-            populateModalForEdit(produit);
-        });
-    }
 
     if (titleEl) {
         titleEl.textContent = produit.code || 'Détails du produit';
@@ -609,12 +550,12 @@ function populateOffcanvasDetails(data) {
         return `
             <div class="carousel-item ${index === 0 ? 'active' : ''}">
                 <div class="position-relative">
-                    <img src="${imageSrc}" class="d-block w-100" style="aspect-ratio: 1 / 1; object-fit: cover;">
+                    <img src="${imageSrc}" class="d-block w-100" style="height: 240px; object-fit: cover;">
                 </div>
             </div>`;
     }).join('') : `
             <div class="carousel-item active">
-                <img src="./uploads/produits/default_1.png" class="d-block w-100" style="aspect-ratio: 1 / 1; object-fit: cover;">
+                <img src="./uploads/produits/default_1.png" class="d-block w-100" style="height: 240px; object-fit: cover;">
             </div>`;
 
     const indicators = images.length > 1 ? `<div class="carousel-indicators">
@@ -761,177 +702,11 @@ function updateCountersProduits(counterData) {
     });
 }
 
-async function loadExistingImages(produitId) {
-    const container = document.getElementById('existingImagesContainer');
-    if (!container) return;
-    
-    try {
-        const formData = new FormData();
-        formData.append('action', 'getProduitImages');
-        formData.append('produit_id', produitId);
-        
-        const response = await fetch('./api/produits.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.images && data.images.length > 0) {
-            container.innerHTML = data.images.map(image => {
-                const imageSrc = /^https?:\/\//i.test(image.url_image) 
-                    ? image.url_image 
-                    : `./uploads/produits/${image.url_image}`;
-                
-                return `
-                    <div class="col-md-3 col-sm-4 col-6 position-relative mb-2" data-image-id="${image.id}">
-                        <div class="card h-100">
-                            <img src="${imageSrc}" class="card-img-top" style="aspect-ratio: 1 / 1; object-fit: cover;" alt="Image produit">
-                            <div class="card-body p-2 text-center">
-                                <small class="text-muted">${image.est_principale == 1 ? '⭐ Principale' : ''}</small>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-existing-image" 
-                                    data-image-id="${image.id}" data-produit-id="${produitId}" 
-                                    data-image-url="${image.url_image}" title="Supprimer">
-                                <i class='bx bx-trash'></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            document.querySelectorAll('.delete-existing-image').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const imageId = btn.dataset.imageId;
-                    const produitId = btn.dataset.produitId;
-                    
-                    if (confirm('Voulez-vous vraiment supprimer cette image ?')) {
-                        const deleted = await supprimerProduitImage(imageId);
-                        if (deleted) {
-                            await loadExistingImages(produitId);
-                            const details = await fetchProduitDetails(produitId);
-                            if (details) {
-                                populateOffcanvasDetails(details);
-                            }
-                        }
-                    }
-                });
-            });
-        } else {
-            container.innerHTML = '<div class="col-12 text-muted">Aucune image pour ce produit.</div>';
-        }
-    } catch (error) {
-        console.error('Erreur chargement images:', error);
-        container.innerHTML = '<div class="col-12 text-danger">Erreur lors du chargement des images.</div>';
-    }
-}
-
-function populateModalForEdit(produit) {
-    document.getElementById('exampleModalLabel').textContent = 'Modifier le produit';
-    document.getElementById('subExampleModalLabel').textContent = 'Formulaire de modification de produit';
-    document.getElementById('produit_edit_id').value = produit.id;
-    document.getElementById('produitNom').value = produit.nom;
-    document.getElementById('produitCategorieId').value = produit.categorie_id;
-    document.getElementById('produitCategorieLabel').value = produit.categorie;
-    document.getElementById('produitSousCategorieId').value = produit.id_sous_categorie;
-    document.getElementById('produitSousCategorieLabel').value = produit.sous_categorie;
-    document.getElementById('produitDescLabel').value = produit.description;
-    document.getElementById('produitPrixAchat').value = produit.prix;
-    document.getElementById('produitStock').value = produit.stock;
-    document.getElementById('produitStockMin').value = produit.seuil;
-    
-    if (produit.categorie_id) {
-        loadSousCategories(produit.categorie_id).then(() => {
-            document.getElementById('produitSousCategorieLabel').value = produit.sous_categorie;
-            document.getElementById('produitSousCategorieId').value = produit.id_sous_categorie;
-        });
-    }
-    
-    const imagesManagementSection = document.getElementById('imagesManagementSection');
-    if (imagesManagementSection) {
-        imagesManagementSection.style.display = 'block';
-    }
-    
-    const originalImageFieldset = document.querySelector('#produitImages, #produitImageUrls').closest('fieldset');
-    if (originalImageFieldset) {
-        originalImageFieldset.style.display = 'none';
-    }
-    
-    loadExistingImages(produit.id);
-    
-    const inputStockLocal = document.getElementById("produitStock");
-    const inputSeuilLocal = document.getElementById("produitStockMin");
-    verifyStock(inputStockLocal.value, inputSeuilLocal.value, "produitStatut");
-}
-
-function resetModalForm() {
-    const produitForm = document.getElementById('produitForm');
-    if (produitForm) {
-        produitForm.reset();
-    }
-    
-    document.getElementById('exampleModalLabel').textContent = 'Nouveau Produit';
-    document.getElementById('subExampleModalLabel').textContent = "Formulaire d'ajout de produit";
-    document.getElementById('produit_edit_id').value = '';
-    
-    clearSousCategorie();
-    const categorieId = document.getElementById('produitCategorieId');
-    const sousCategorieId = document.getElementById('produitSousCategorieId');
-    if (categorieId) categorieId.value = '';
-    if (sousCategorieId) sousCategorieId.value = '';
-    
-    const categorieInput = document.getElementById('produitCategorieLabel');
-    if (categorieInput) {
-        categorieInput.placeholder = '--choisir--';
-    }
-    
-    const newImages = document.getElementById('produitImagesNew');
-    if (newImages) newImages.value = '';
-    const newImageUrls = document.getElementById('produitImageUrlsNew');
-    if (newImageUrls) newImageUrls.value = '';
-    
-    const existingContainer = document.getElementById('existingImagesContainer');
-    if (existingContainer) existingContainer.innerHTML = '';
-    
-    const originalImageFieldset = document.querySelector('#produitImages, #produitImageUrls').closest('fieldset');
-    if (originalImageFieldset) {
-        originalImageFieldset.style.display = 'block';
-    }
-    
-    const imagesManagementSection = document.getElementById('imagesManagementSection');
-    if (imagesManagementSection) {
-        imagesManagementSection.style.display = 'none';
-    }
-}
-
 function initProduitAdd() {
     const produitForm = document.getElementById('produitForm');
     const addProduitBtn = document.getElementById('submitProduitBtn');
 
     if (!produitForm || !addProduitBtn) return;
-
-    const modal = document.getElementById('exampleModal');
-    if (modal) {
-        modal.addEventListener('hidden.bs.modal', () => {
-            resetModalForm();
-        });
-        
-        modal.addEventListener('show.bs.modal', () => {
-            const editId = document.getElementById('produit_edit_id').value;
-            if (!editId) {
-                const imagesManagementSection = document.getElementById('imagesManagementSection');
-                if (imagesManagementSection) {
-                    imagesManagementSection.style.display = 'none';
-                }
-                const originalImageFieldset = document.querySelector('#produitImages, #produitImageUrls').closest('fieldset');
-                if (originalImageFieldset) {
-                    originalImageFieldset.style.display = 'block';
-                }
-            }
-        });
-    }
 
     addProduitBtn.addEventListener('click', async (event) => {
         event.preventDefault();
@@ -940,30 +715,13 @@ function initProduitAdd() {
             return;
         }
 
-        const editId = document.getElementById('produit_edit_id').value;
-        const isEdit = editId && editId !== '';
-        
-        const action = isEdit ? 'updateProduit' : 'addProduit';
-
         const originalText = addProduitBtn.innerHTML;
         addProduitBtn.disabled = true;
         addProduitBtn.innerHTML = '<i class="bx bx-loader-circle bx-spin me-2"></i>Enregistrement...';
 
         try {
             const formData = new FormData(produitForm);
-            formData.append('action', action);
-            
-            const newImages = document.getElementById('produitImagesNew');
-            if (newImages && newImages.files.length > 0) {
-                for (let i = 0; i < newImages.files.length; i++) {
-                    formData.append('new_images[]', newImages.files[i]);
-                }
-            }
-            
-            const newImageUrls = document.getElementById('produitImageUrlsNew');
-            if (newImageUrls && newImageUrls.value.trim()) {
-                formData.append('new_image_urls', newImageUrls.value);
-            }
+            formData.append('action', 'addProduit');
 
             const response = await fetch('./api/produits.php', {
                 method: 'POST',
@@ -976,15 +734,19 @@ function initProduitAdd() {
                 Swal.fire({
                     icon: 'success',
                     title: 'Succès',
-                    text: data.message || (isEdit ? 'Produit modifié avec succès.' : 'Produit ajouté avec succès.'),
+                    text: data.message || 'Produit ajouté avec succès.',
                     confirmButtonColor: '#3d6dff',
                     timer: 1200
                 }).then(() => {
-                    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
-                    if (modalInstance) modalInstance.hide();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
+                    if (modal) modal.hide();
 
                     produitForm.reset();
-                    resetModalForm();
+                    clearSousCategorie();
+                    const categorieId = document.getElementById('produitCategorieId');
+                    const sousCategorieId = document.getElementById('produitSousCategorieId');
+                    if (categorieId) categorieId.value = '';
+                    if (sousCategorieId) sousCategorieId.value = '';
                     Produits();
                 });
             } else {
@@ -1033,11 +795,13 @@ function initProduitStatusSwitches() {
                     showAlert('success', 'Statut du produit mis à jour.');
                 } else {
                     showAlert('error', data.error || 'Erreur lors de la mise à jour.');
+                    // Remettre le switch à son état précédent
                     event.target.checked = !isActive;
                 }
             } catch (error) {
                 console.error('Erreur:', error);
                 showAlert('error', 'Erreur lors de la mise à jour du statut.');
+                // Remettre le switch à son état précédent
                 event.target.checked = !isActive;
             }
         }

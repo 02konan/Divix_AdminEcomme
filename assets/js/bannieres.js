@@ -141,11 +141,11 @@ function afficheBannieres(bannieres) {
                         </div>
                         <hr class="my-2">
                         <div class="d-flex gap-2">
-                            <div class="form-check form-switch mt-auto me-auto">
+                            <!--<div class="form-check form-switch mt-auto me-auto">
                                 <input class="form-check-input" type="checkbox" role="switch" id="switchCheckChecked${banner.id}" data-id="${banner.id}" ${banner.active === 1 ? 'checked' : ''}>
                                 <label class="form-check-label" for="switchCheckChecked${banner.id}">Active</label>
-                            </div>
-                            <div class="d-flex gap-1 align-items-center">
+                            </div>-->
+                            <div class="d-flex gap-1 align-items-center ms-auto">
                                 <i class="bx bx-calendar-x me-1"></i><span class="small text-muted">${banner.date_fin ? new Date(banner.date_fin).toLocaleDateString('fr-FR') : "Illimité"}</span>
                             </div>
                         </div>

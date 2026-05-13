@@ -24,7 +24,7 @@ try {
     }
 
     // Vérifier les informations d'identification
-    $stmt = $bd->prepare("SELECT * FROM users WHERE email = :email");
+    $stmt = $bd->prepare("SELECT u.*, r.nom_roles AS roles FROM users u LEFT JOIN role r ON u.role = r.id WHERE email = :email");
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -45,7 +45,7 @@ try {
     $_SESSION['nom'] = $user['nom'];
     $_SESSION['email'] = $user['email'];
     $_SESSION['telephone'] = $user['telephone'];
-    $_SESSION['role'] = $user['role'];
+    $_SESSION['role'] = $user['roles'];
     $_SESSION['auth'] = true;
 
     // $data = [
@@ -62,7 +62,7 @@ try {
 
 
     header('Content-Type: application/json');
-    echo json_encode(['success' => true, 'message' => 'Connexion réussie', 'redirect' => './dashboard.php']);
+    echo json_encode(['success' => true, 'message' => 'Connexion réussie', 'redirect' => './produits.php']);
 
 } catch (Exception $e) {
 

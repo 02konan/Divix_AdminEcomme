@@ -1,4 +1,33 @@
 <?php include('./includes/header.php') ?>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasDetailsCommandes">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Détails commande</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <!-- Informations commande -->
+        <h6 class="mb-3">Informations commande</h6>
+        <div id="commandeDetailsInfo"></div>
+        
+        <hr class="my-4">
+        
+        <!-- Informations client -->
+        <h6 class="mb-3">Informations client</h6>
+        <div id="commandeDetailsClient"></div>
+        
+        <hr class="my-4">
+        
+        <!-- Liste des produits -->
+        <h6 class="mb-3">Produits commandés</h6>
+        <div id="commandeDetailsProduits"></div>
+    </div>
+    <div class="offcanvas-footer">
+        <!-- Actions -->
+        <div class="p-3 border-top d-flex gap-2">
+            <button class="btn btn-sm btn-secondary d-flex align-items-center" data-bs-dismiss="offcanvas">Fermer</button>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg">
     <div class="modal-content">
@@ -104,7 +133,7 @@
                         <span class="small text-muted">Total Clients</span>
                     </div>
                 </div>
-                <h1 class="mt-2"><span class="purecounter" data-purecounter-start="0" data-purecounter-end="320" data-purecounter-duration="1.0"></span></h1>
+                <h1 class="mt-2"><span id="countertotal_clients"></span></h1>
             </div>
         </div>
         <div class="col-md-4 col-lg-4 card-group">
@@ -182,13 +211,13 @@
                                 <th class="text-muted" scope="col"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
                                 <th class="text-muted" scope="col">CLIENT</th>
                                 <th class="text-muted" scope="col">CONTACT</th>
-                                <th class="text-muted" scope="col">LOCALISATION</th>
                                 <th class="text-muted" scope="col">EMAIL</th>
+                                <th class="text-muted" scope="col">COMMANDES</th>
                                 <th class="text-muted" scope="col">DATE D'AJOUT</th>
                                 <th class="text-muted text-end" scope="col">ACTION</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="result-clients">
                             <tr>
                                 <th scope="row"><input class="form-check-input" type="checkbox" value=""></th>
                                 <td data-label="Client">

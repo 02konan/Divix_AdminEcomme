@@ -2,9 +2,11 @@
 session_start();
 require('../config/database.php');
 
+// Désactiver l'affichage des erreurs
 ini_set('display_errors', 0);
 error_reporting(0);
 
+// Vérifier que la requête est en POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
     exit;
@@ -35,12 +37,6 @@ try {
         case 'updateProduitStatus':
             updateProduitStatus();
             break;
-        case 'getProduitImages':
-            getProduitImages();
-            break;
-        case 'updateProduit':
-            updateProduit();
-            break;
         default:
             throw new Exception("Action inconnue!");
     }
@@ -58,6 +54,7 @@ function genererCodeProduit() {
     global $bd;
     
     try {
+        // Récupérer le dernier code produit
         $query = "SELECT code FROM produits ORDER BY id DESC LIMIT 1";
         $stmt = $bd->prepare($query);
         $stmt->execute();
@@ -129,8 +126,15 @@ function getSousCategories() {
         if (tableExists('sous_categories')) {
             $query = 'SELECT id, nom FROM sous_categories WHERE id_categorie = ? ORDER BY nom ASC';
             $stmt = $bd->prepare($query);
-            $stmt->execute([$categorieId]);
-            $sousCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            try {
+                $stmt->execute([$categorieId]);
+                $sousCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                $query = 'SELECT id, nom FROM sous_categories WHERE id_categorie = ? ORDER BY nom ASC';
+                $stmt = $bd->prepare($query);
+                $stmt->execute([$categorieId]);
+                $sousCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
         }
 
         if (empty($sousCategories)) {
@@ -188,8 +192,15 @@ function getOrCreateSousCategorieId($nom, $categorieId = null) {
     if ($categorieId) {
         $query = 'SELECT id FROM sous_categories WHERE LOWER(nom) = LOWER(?) AND id_categorie = ? LIMIT 1';
         $stmt = $bd->prepare($query);
-        $stmt->execute([$nom, $categorieId]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt->execute([$nom, $categorieId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $query = 'SELECT id FROM sous_categories WHERE LOWER(nom) = LOWER(?) AND id_categorie = ? LIMIT 1';
+            $stmt = $bd->prepare($query);
+            $stmt->execute([$nom, $categorieId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
     }
 
     if (!$row) {
@@ -297,6 +308,7 @@ function addProduit() {
                             $stmt->execute([$produitId, $safeName, $hasPrimaryImage ? 0 : 1]);
                             $hasPrimaryImage = true;
                         } catch (PDOException $e) {
+                            // ignore image insert if schema differs
                         }
                     }
                 }
@@ -317,6 +329,7 @@ function addProduit() {
                         $stmt->execute([$produitId, $url, $hasPrimaryImage ? 0 : 1]);
                         $hasPrimaryImage = true;
                     } catch (PDOException $e) {
+                        // ignore image insert if schema differs
                     }
                 }
             }
@@ -343,6 +356,11 @@ function getProduits() {
     global $bd;
     
     try {
+        $search = isset($_POST['searchInput']) ? trim($_POST['searchInput']) : '';
+        // $page = isset($_POST['page']) ? (int)$_POST['page'] : 1;
+        // $limit = 10;
+        // $offset = ($page - 1) * $limit;
+        
         $query = "SELECT 
             p.*, 
             pi.url_image,
@@ -362,20 +380,36 @@ function getProduits() {
         LEFT JOIN categories c
             ON sc.id_categorie = c.id
         ORDER BY p.id DESC";
+        $params = [];
         
         $stmt = $bd->prepare($query);
-        $stmt->execute();
+        $stmt->execute($params);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $queryCounter = "
         SELECT 
-            COUNT(*) AS total_produits,
-            COUNT(CASE WHEN stock <= seuil AND stock > 0 THEN 1 END) AS stock_faible,
-            COUNT(CASE WHEN stock <= 0 THEN 1 END) AS rupture_stock
-        FROM produits;";
+
+        COUNT(*) AS total_produits,
+
+        COUNT(
+            CASE 
+                WHEN stock <= seuil 
+                AND stock > 0 
+                THEN 1 
+            END
+        ) AS stock_faible,
+
+        COUNT(
+            CASE 
+                WHEN stock <= 0 
+                THEN 1 
+            END
+        ) AS rupture_stock
+
+    FROM produits;";
 
         $stmtCounter = $bd->prepare($queryCounter);
-        $stmtCounter->execute();
+        $stmtCounter->execute([]);
         $counter = $stmtCounter->fetchAll(PDO::FETCH_ASSOC);
         
         $response = [
@@ -405,7 +439,6 @@ function getProduitDetails() {
             p.*, 
             sc.nom AS sous_categorie,
             c.nom AS categorie,
-            c.id AS categorie_id,
             CASE
                 WHEN p.stock <= 0 THEN 'Rupture'
                 WHEN p.stock <= p.seuil AND p.stock > 0 THEN 'St. faible'
@@ -450,187 +483,31 @@ function getProduitDetails() {
     }
 }
 
-function getProduitImages() {
-    global $bd;
-    
-    try {
-        $produitId = isset($_POST['produit_id']) ? intval($_POST['produit_id']) : 0;
-        if (!$produitId) {
-            throw new Exception('ID du produit requis.');
-        }
-        
-        $images = [];
-        if (tableExists('produit_images')) {
-            $stmt = $bd->prepare('SELECT id, url_image, est_principale FROM produit_images WHERE id_produit = ? ORDER BY est_principale DESC, id ASC');
-            $stmt->execute([$produitId]);
-            $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'images' => $images
-        ]);
-    } catch (Exception $e) {
-        header('Content-Type: application/json');
-        error_log($e->getMessage());
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-    }
-}
-
-function updateProduit() {
-    global $bd;
-    
-    try {
-        $editId = isset($_POST['edit_id']) ? intval($_POST['edit_id']) : 0;
-        if (!$editId) {
-            throw new Exception('ID du produit requis pour la modification.');
-        }
-        
-        $nom = trim($_POST['nom'] ?? '');
-        $categorieLabel = trim($_POST['categorie_label'] ?? '');
-        $sousCategorieLabel = trim($_POST['sous_categorie_label'] ?? '');
-        $categorieId = trim($_POST['categorie'] ?? '');
-        $sousCategorieId = trim($_POST['sous_categorie'] ?? '');
-        $description = trim($_POST['description'] ?? '');
-        $prixVente = isset($_POST['prix_vente']) ? floatval($_POST['prix_vente']) : 0;
-        $stock = isset($_POST['stock']) ? intval($_POST['stock']) : 0;
-        $seuil = isset($_POST['stock_min']) ? intval($_POST['stock_min']) : 0;
-        
-        if (!$nom) {
-            throw new Exception('Le nom du produit est requis.');
-        }
-        if (!$categorieLabel) {
-            throw new Exception('La catégorie est requise.');
-        }
-        if (!$sousCategorieLabel) {
-            throw new Exception('La sous-catégorie est requise.');
-        }
-        if (!$description) {
-            throw new Exception('La description est requise.');
-        }
-        
-        if (!$categorieId) {
-            $categorieId = getOrCreateCategoryId($categorieLabel);
-        }
-        
-        if (!$sousCategorieId) {
-            $sousCategorieId = getOrCreateSousCategorieId($sousCategorieLabel, $categorieId ?: null);
-        }
-        
-        $stmt = $bd->prepare('UPDATE produits SET 
-            nom = ?, 
-            prix = ?, 
-            description = ?, 
-            stock = ?, 
-            seuil = ?, 
-            id_sous_categorie = ? 
-            WHERE id = ?');
-        
-        $stmt->execute([
-            $nom,
-            $prixVente,
-            $description,
-            $stock,
-            $seuil,
-            $sousCategorieId,
-            $editId
-        ]);
-        
-        $hasPrimaryImage = false;
-        
-        $stmt = $bd->prepare('SELECT COUNT(*) as count FROM produit_images WHERE id_produit = ?');
-        $stmt->execute([$editId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $hasPrimaryImage = $result['count'] > 0;
-        
-        $uploadDir = __DIR__ . '/../uploads/produits/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        
-        if (!empty($_FILES['new_images']) && is_array($_FILES['new_images']['name'])) {
-            foreach ($_FILES['new_images']['name'] as $index => $name) {
-                if ($_FILES['new_images']['error'][$index] !== UPLOAD_ERR_OK) {
-                    continue;
-                }
-                
-                $imageName = basename($name);
-                $extension = pathinfo($imageName, PATHINFO_EXTENSION);
-                $safeName = uniqid('prod_') . '.' . $extension;
-                $targetPath = $uploadDir . $safeName;
-                
-                if (move_uploaded_file($_FILES['new_images']['tmp_name'][$index], $targetPath)) {
-                    if (tableExists('produit_images')) {
-                        $stmt = $bd->prepare('INSERT INTO produit_images (id_produit, url_image, est_principale) VALUES (?, ?, ?)');
-                        $stmt->execute([$editId, $safeName, $hasPrimaryImage ? 0 : 1]);
-                        $hasPrimaryImage = true;
-                    }
-                }
-            }
-        }
-        
-        $imageUrlsRaw = trim($_POST['new_image_urls'] ?? '');
-        if ($imageUrlsRaw) {
-            $urls = preg_split('/\r?\n|,/', $imageUrlsRaw, -1, PREG_SPLIT_NO_EMPTY);
-            foreach ($urls as $url) {
-                $url = trim($url);
-                if (!$url || !preg_match('#^https?://#i', $url)) {
-                    continue;
-                }
-                if (tableExists('produit_images')) {
-                    $stmt = $bd->prepare('INSERT INTO produit_images (id_produit, url_image, est_principale) VALUES (?, ?, ?)');
-                    $stmt->execute([$editId, $url, $hasPrimaryImage ? 0 : 1]);
-                    $hasPrimaryImage = true;
-                }
-            }
-        }
-        
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'message' => 'Produit modifié avec succès.'
-        ]);
-        
-    } catch (Exception $e) {
-        header('Content-Type: application/json');
-        error_log($e->getMessage());
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-    }
-}
-
 function deleteProduitImage() {
     global $bd;
-    
+
     try {
         $imageId = isset($_POST['image_id']) ? intval($_POST['image_id']) : 0;
         if (!$imageId) {
             throw new Exception('ID de l\'image requis.');
         }
-        
+
         if (!tableExists('produit_images')) {
             throw new Exception('Table produit_images introuvable.');
         }
-        
+
         $stmt = $bd->prepare('SELECT id_produit, url_image, est_principale FROM produit_images WHERE id = ?');
         $stmt->execute([$imageId]);
         $image = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$image) {
             throw new Exception('Image introuvable.');
         }
-        
+
         $bd->beginTransaction();
-        
         $stmt = $bd->prepare('DELETE FROM produit_images WHERE id = ?');
         $stmt->execute([$imageId]);
-        
+
         if ($image['est_principale']) {
             $stmt = $bd->prepare('SELECT id FROM produit_images WHERE id_produit = ? ORDER BY id ASC LIMIT 1');
             $stmt->execute([$image['id_produit']]);
@@ -640,22 +517,21 @@ function deleteProduitImage() {
                 $stmt->execute([$nextImage['id']]);
             }
         }
-        
+
         $bd->commit();
-        
+
         if (!preg_match('#^https?://#i', $image['url_image'])) {
             $filePath = __DIR__ . '/../uploads/produits/' . $image['url_image'];
             if (file_exists($filePath)) {
                 @unlink($filePath);
             }
         }
-        
+
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
-            'message' => 'Image du produit supprimée avec succès.'
+            'message' => 'Image du produit supprimée.'
         ]);
-        
     } catch (Exception $e) {
         if ($bd->inTransaction()) {
             $bd->rollBack();
@@ -680,12 +556,15 @@ function updateProduitStatus() {
             throw new Exception('ID du produit requis.');
         }
 
+        // Vérifier si le produit existe
         $stmt = $bd->prepare('SELECT id FROM produits WHERE id = ?');
         $stmt->execute([$produitId]);
         if (!$stmt->fetch()) {
             throw new Exception('Produit non trouvé.');
         }
 
+        // Mettre à jour le statut actif (on peut utiliser un champ 'active' ou 'statut')
+        // Ici on suppose qu'il y a un champ 'active' dans la table produits
         $stmt = $bd->prepare('UPDATE produits SET active = ? WHERE id = ?');
         $stmt->execute([$active, $produitId]);
 

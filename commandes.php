@@ -1,4 +1,34 @@
 <?php include('./includes/header.php') ?>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasDetailsCommandes">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Détails commande</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <!-- Informations commande -->
+        <h6 class="mb-3">Informations commande</h6>
+        <div id="commandeDetailsInfo"></div>
+        
+        <hr class="my-4">
+        
+        <!-- Informations client -->
+        <h6 class="mb-3">Informations client</h6>
+        <div id="commandeDetailsClient"></div>
+        
+        <hr class="my-4">
+        
+        <!-- Liste des produits -->
+        <h6 class="mb-3">Produits commandés</h6>
+        <div id="commandeDetailsProduits"></div>
+    </div>
+    <div class="offcanvas-footer">
+        <!-- Actions -->
+        <div class="p-3 border-top d-flex gap-2">
+            <button class="btn btn-sm btn-success d-flex align-items-center" id="livree" data-commande-id="" date-statut="livree"><i class="bx bx-scooter-delivery me-2"></i>Livrer</button>
+            <button class="btn btn-sm btn-primary d-flex align-items-center me-auto" id="expediee" data-commande-id="" date-statut="expediee"><i class="bx bx-box-alt me-2"></i>Expédier</button>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg">
     <div class="modal-content">
@@ -166,7 +196,7 @@
                     </div>
                     <!-- <span class="ms-auto badge badge-success">+12% ce John Does</span> -->
                 </div>
-                <h1 class="mt-2"><span class="purecounter" data-purecounter-start="0" data-purecounter-end="1430" data-purecounter-duration="1.0"></span></h1>
+                <h1 class="mt-2"><span id="countertotal_commandes"></span></h1>
             </div>
         </div>
         <div class="col-md-4 col-lg-4 card-group">
@@ -184,7 +214,7 @@
                     </div>
                     <span class="ms-auto badge badge-success">Cummulé</span>
                 </div>
-                <h1 class="mt-2"><span class="purecounter" data-purecounter-start="0" data-purecounter-end="1988000" data-purecounter-duration="1.0"></span><span class="small franc text-muted"> FCFA</span></h1>
+                <h1 class="mt-2"><span id="counterchiffre_affaire"></span><span class="small franc text-muted"> FCFA</span></h1>
             </div>
         </div>
         <div class="col-md-4 col-lg-4 card-group">
@@ -198,11 +228,11 @@
                                 <path d="M12 2C8.02 2 4 3.37 4 6v12c0 2.63 4.02 4 8 4s8-1.37 8-4V6c0-2.63-4.02-4-8-4m0 18c-3.72 0-6-1.29-6-2v-1.27c1.54.84 3.78 1.27 6 1.27s4.46-.43 6-1.27V18c0 .71-2.28 2-6 2m0-4c-3.72 0-6-1.29-6-2v-1.27c1.54.84 3.78 1.27 6 1.27s4.46-.43 6-1.27V14c0 .71-2.28 2-6 2m0-4c-3.72 0-6-1.29-6-2V8.73C7.54 9.57 9.78 10 12 10s4.46-.43 6-1.27V10c0 .71-2.28 2-6 2m0-4C8.28 8 6 6.71 6 6s2.28-2 6-2 6 1.29 6 2-2.28 2-6 2"></path>
                             </svg>
                         </div>
-                        <span class="small text-muted">Impayés</span>
+                        <span class="small text-muted">Rev. Journalié</span>
                     </div>
                     <span class="ms-auto badge badge-success">Cummulé</span>
                 </div>
-                <h1 class="mt-2"><span class="purecounter" data-purecounter-start="0" data-purecounter-end="50000" data-purecounter-duration="1.0"></span><span class="small franc text-muted"> FCFA</span></h1>
+                <h1 class="mt-2"><span id="counterchiffre_affaire_jour"></span><span class="small franc text-muted"> FCFA</span></h1>
             </div>
         </div>
     </div>
@@ -242,296 +272,17 @@
                         <thead>
                             <tr class="table-light">
                                 <th class="text-muted" scope="col"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
+                                <th class="text-muted" scope="col">REFERENCE</th>
                                 <th class="text-muted" scope="col">CLIENT</th>
-                                <th class="text-muted" scope="col">ID TRANS.</th>
-                                <th class="text-muted" scope="col">STATUT</th>
+                                <th class="text-muted" scope="col">PRODUITS</th>
                                 <th class="text-muted" scope="col">MONTANT</th>
+                                <th class="text-muted" scope="col">STATUT</th>
                                 <th class="text-muted" scope="col">DATE</th>
                                 <th class="text-muted text-end" scope="col">ACTION</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">John Doe</p>
-                                            <p class="text-muted small m-0 p-0">0789090076</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge active">Soldé</span></td>
-                                <td>
-                                    10 000
-                                </td>
-                                <td><span class="text-muted">25 Juillet 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">John Doe</p>
-                                            <p class="text-muted small m-0 p-0">0789090076</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge active">Soldé</span></td>
-                                <td>
-                                    25 000
-                                </td>
-                                <td><span class="text-muted">12 Juin 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">Athur Heros</p>
-                                            <p class="text-muted small m-0 p-0">0506789767</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge pending">En cours</span></td>
-                                <td>
-                                    -5 000
-                                </td>
-                                <td><span class="text-muted">09 Aout 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">John Doe</p>
-                                            <p class="text-muted small m-0 p-0">0789090076</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge pending">En cours</span></td>
-                                <td class="">
-                                    -100 000
-                                </td>
-                                <td><span class="text-muted">14 Juillet 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">John Doe</p>
-                                            <p class="text-muted small m-0 p-0">0789090076</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge active">Soldé</span></td>
-                                <td>
-                                    10 000
-                                </td>
-                                <td><span class="text-muted">25 Juillet 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">John Doe</p>
-                                            <p class="text-muted small m-0 p-0">0789090076</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge active">Soldé</span></td>
-                                <td>
-                                    25 000
-                                </td>
-                                <td><span class="text-muted">12 Juin 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">Athur Heros</p>
-                                            <p class="text-muted small m-0 p-0">0506789767</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge pending">En cours</span></td>
-                                <td>
-                                    -5 000
-                                </td>
-                                <td><span class="text-muted">09 Aout 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><input class="form-check-input" type="checkbox" value="" id="checkDefault"></th>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                    
-                                        <div class="">
-                                            <p class="m-0 p-0">John Doe</p>
-                                            <p class="text-muted small m-0 p-0">0789090076</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>T_66RTYIUGFYUTOUIUZT</td>
-                                <td><span class="status-badge pending">En cours</span></td>
-                                <td class="">
-                                    -100 000
-                                </td>
-                                <td><span class="text-muted">14 Juillet 2023</span></td>
-                                <td class="no-print-col" style="text-align: end;">
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-secondary btn-sm td-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu shadow-sm" style="z-index: 109;">
-                                            <li><a class="dropdown-item" href="#" >
-                                                <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
-                                                    fill="currentColor" viewBox="0 0 24 24" >
-                                                    <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
-                                                    <path d="M12 22c5.51 0 10-4.49 10-10S17.51 2 12 2 2 6.49 2 12s4.49 10 10 10M11 7h2v2h-2zm0 4h2v6h-2z"></path>
-                                                </svg>
-                                                <span class="ms-2">Détails</span>
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            
+                        <tbody id="result-commandes">
+                            <!-- générer dynamiquement -->
                         </tbody>
                     </table>
                 </div>
