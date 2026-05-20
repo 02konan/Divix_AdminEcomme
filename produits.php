@@ -66,6 +66,12 @@
                         <textarea class="form-control" id="produitDescLabel" placeholder="Tapez la description du produit" name="description" autocomplete="off" required></textarea>
                     </div>
                 </div>
+                <div class="d-flex gap-2">
+                    <div class="col mb-3">
+                        <label for="produitCaractLabel" class="form-label">Caractéristique</label>
+                        <textarea class="form-control" id="produitCaractLabel" placeholder="Tapez les caractéristiques du produit" name="caracteristique" autocomplete="off"></textarea>
+                    </div>
+                </div>
             </fieldset>
 
             <fieldset>

@@ -232,7 +232,8 @@ function addProduit() {
         $sousCategorieLabel = trim($_POST['sous_categorie_label'] ?? '');
         $categorieId = trim($_POST['categorie'] ?? '');
         $sousCategorieId = trim($_POST['sous_categorie'] ?? '');
-        $description = trim($_POST['description'] ?? '');
+        $description = trim($_POST['description'] ? nl2br($_POST['description']) : '');
+        $caracteristique = $_POST['caracteristique'] ? trim(nl2br($_POST['caracteristique'])) : null;
         $prixVente = isset($_POST['prix_vente']) ? trim($_POST['prix_vente']) : '';
         $stock = isset($_POST['stock']) ? intval($_POST['stock']) : 0;
         $seuil = isset($_POST['stock_min']) ? intval($_POST['stock_min']) : 0;
@@ -260,12 +261,13 @@ function addProduit() {
 
         $code = genererCodeProduit();
 
-        $stmt = $bd->prepare('INSERT INTO produits (code, nom, prix, description, stock, seuil, id_sous_categorie) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $stmt = $bd->prepare('INSERT INTO produits (code, nom, prix, description, caracteristique, stock, seuil, id_sous_categorie) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
             $code,
             $nom,
             $prixVente,
             $description,
+            $caracteristique,
             $stock,
             $seuil,
             $sousCategorieId
@@ -344,24 +346,35 @@ function getProduits() {
     
     try {
         $query = "SELECT 
-            p.*, 
-            pi.url_image,
-            sc.nom AS sous_categorie,
-            c.nom AS categorie,
-            CASE
-                WHEN p.stock <= 0 THEN 'Rupture'
-                WHEN p.stock <= p.seuil AND p.stock > 0 THEN 'St. faible'
-                ELSE 'En stock'
-            END AS statut
-        FROM produits p
-        LEFT JOIN produit_images pi 
-            ON p.id = pi.id_produit
-            AND pi.est_principale = TRUE
-        LEFT JOIN sous_categories sc
-            ON p.id_sous_categorie = sc.id
-        LEFT JOIN categories c
-            ON sc.id_categorie = c.id
-        ORDER BY p.id DESC";
+    p.*, 
+    pi.url_image,
+    sc.nom AS sous_categorie,
+    c.nom AS categorie,
+    r.id AS reduction_id,
+    r.code AS reduction_code,
+    r.type AS reduction_type,
+    r.valeur AS reduction_valeur,
+    CASE
+        WHEN p.stock <= 0 THEN 'Rupture'
+        WHEN p.stock <= p.seuil AND p.stock > 0 THEN 'St. faible'
+        ELSE 'En stock'
+    END AS statut
+FROM produits p
+LEFT JOIN produit_images pi 
+    ON p.id = pi.id_produit
+    AND pi.est_principale = TRUE
+LEFT JOIN sous_categories sc
+    ON p.id_sous_categorie = sc.id
+LEFT JOIN categories c
+    ON sc.id_categorie = c.id
+LEFT JOIN (
+    SELECT rp.id_produit, r.id, r.code, r.type, r.valeur
+    FROM reduction_produits rp
+    INNER JOIN reductions r ON rp.id_reduction = r.id
+    WHERE r.actif = 1
+    GROUP BY rp.id_produit
+) r ON p.id = r.id_produit
+ORDER BY p.id DESC";
         
         $stmt = $bd->prepare($query);
         $stmt->execute();

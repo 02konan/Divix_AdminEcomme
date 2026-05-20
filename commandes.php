@@ -21,13 +21,39 @@
         <h6 class="mb-3">Produits commandés</h6>
         <div id="commandeDetailsProduits"></div>
     </div>
-    <div class="offcanvas-footer">
+    <div class="offcanvas-footer" id="offcanvas-footer-commande">
         <!-- Actions -->
         <div class="p-3 border-top d-flex gap-2">
-            <button class="btn btn-sm btn-success d-flex align-items-center" id="livree" data-commande-id="" date-statut="livree"><i class="bx bx-scooter-delivery me-2"></i>Livrer</button>
-            <button class="btn btn-sm btn-primary d-flex align-items-center me-auto" id="expediee" data-commande-id="" date-statut="expediee"><i class="bx bx-box-alt me-2"></i>Expédier</button>
-        </div>
+            <button class="btn btn-sm btn-success d-flex align-items-center" id="livree" data-commande-id="" data-statut="livree"><i class="bx bx-scooter-delivery me-2"></i>Livrer</button>
+        <!-- Modifiez cette ligne dans commandes.php -->
+        <button class="btn btn-sm btn-primary d-flex align-items-center me-auto" id="expediee" data-commande-id="" data-statut="expediee"><i class="bx bx-box-alt me-2"></i>Expédier</button>        </div>
     </div>
+    <form action="" id="form_reduction">
+        <input type="hidden" name="produit_reduction_id" id="produit_reduction_id">
+        <div class="d-flex gap-2">
+            <div class="col mb-3">
+                <label for="" class="form-label">Type <span class="small text-danger">*</span></label>
+                <select name="type_reduction" id="type_reduction" class="form-select">
+                    <option value="" selected disabled>--Type--</option>
+                    <option value="pourcentage">Pourcentage</option>
+                    <option value="montant">Montant</option>
+                </select>
+            </div>
+            <div class="col mb-3">
+                <label for="" class="form-label">Valeur <span class="small text-danger">*</span></label>
+                <input type="number" class="form-control" id="valeur_reduction" placeholder="" name="valeur_reduction" autocomplete="off" required>
+            </div>
+        </div>
+        <div class="col mb-3">
+            <label for="" class="form-label">Type <span class="small text-danger">*</span></label>
+            <select name="type_reduction" id="type_reduction" class="form-select">
+                <option value="" selected disabled>--Type--</option>
+                <option value="pourcentage">Pourcentage</option>
+                <option value="montant">Montant</option>
+            </select>
+        </div>
+        <button type="submit" id="submit_reduction"></button>
+    </form>
 </div>
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg">
@@ -161,24 +187,22 @@
 </div>
 <div class="content-wrapper d-flex flex-column gap-3">
     <div class="add-box d-flex align-items-center w-100 px-2 gap-2">
-        <p class="m-0"><span class="text-muted">Dashboard / </span><span class="fw-medium">Commandes</span></p>
-        <button class="ms-auto btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        <p class="m-0 me-auto"><span class="text-muted">Dashboard / </span><span class="fw-medium">Commandes</span></p>
+        <!-- <button class="ms-auto btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModal">
             <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
                 fill="currentColor" viewBox="0 0 24 24" >
-                <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
                 <path d="m21.8 6.4-2.7-3.6c-.38-.5-.97-.8-1.6-.8h-11c-.63 0-1.23.3-1.6.8L2.2 6.4h.01c-.13.18-.21.37-.21.6v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-.23-.09-.42-.21-.59h.01ZM13 14v4h-2v-4H8l4-4 4 4zM5 6l1.5-2h11L19 6z"></path>
             </svg>
             <span class="mx-1">Exporter
             </span>
-        </button>
-        <button class=" btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        </button> -->
+        <!-- <button class=" btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
             <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16"  
                 fill="currentColor" viewBox="0 0 24 24" >
-                <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
                 <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z"></path>
             </svg>
             <span class="mx-1">Commande</span>
-        </button>
+        </button> -->
     </div>
     <div class="w-100 row g-3 px-0 mx-0">
         <div class="col-md-4 col-lg-4 card-group">

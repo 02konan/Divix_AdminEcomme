@@ -362,28 +362,38 @@ function getProduits() {
         // $offset = ($page - 1) * $limit;
         
         $query = "SELECT 
-            p.*, 
-            pi.url_image,
-            sc.nom AS sous_categorie,
-            c.nom AS categorie,
-            CASE
-                WHEN p.stock <= 0 THEN 'Rupture'
-                WHEN p.stock <= p.seuil AND p.stock > 0 THEN 'St. faible'
-                ELSE 'En stock'
-            END AS statut
-        FROM produits p
-        LEFT JOIN produit_images pi 
-            ON p.id = pi.id_produit
-            AND pi.est_principale = TRUE
-        LEFT JOIN sous_categories sc
-            ON p.id_sous_categorie = sc.id
-        LEFT JOIN categories c
-            ON sc.id_categorie = c.id
-        ORDER BY p.id DESC";
-        $params = [];
-        
+    p.*, 
+    pi.url_image,
+    sc.nom AS sous_categorie,
+    c.nom AS categorie,
+    r.id AS reduction_id,
+    r.code AS reduction_code,
+    r.type AS reduction_type,
+    r.valeur AS reduction_valeur,
+    CASE
+        WHEN p.stock <= 0 THEN 'Rupture'
+        WHEN p.stock <= p.seuil AND p.stock > 0 THEN 'St. faible'
+        ELSE 'En stock'
+    END AS statut
+FROM produits p
+LEFT JOIN produit_images pi 
+    ON p.id = pi.id_produit
+    AND pi.est_principale = TRUE
+LEFT JOIN sous_categories sc
+    ON p.id_sous_categorie = sc.id
+LEFT JOIN categories c
+    ON sc.id_categorie = c.id
+LEFT JOIN (
+    SELECT rp.id_produit, r.id, r.code, r.type, r.valeur
+    FROM reduction_produits rp
+    INNER JOIN reductions r ON rp.id_reduction = r.id
+    WHERE r.actif = 1
+    GROUP BY rp.id_produit
+) r ON p.id = r.id_produit
+ORDER BY p.id DESC";
+
         $stmt = $bd->prepare($query);
-        $stmt->execute($params);
+        $stmt->execute();
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $queryCounter = "

@@ -1,5 +1,9 @@
 <?php
 
+// $host = "localhost";        // ex: mysql.xxxx.com
+// $dbname = "divix_ecommerce";
+// $username = "root";
+// $password = "";
 $host = "mysql-divix.alwaysdata.net";        // ex: mysql.xxxx.com
 $dbname = "divix_ecommerce";
 $username = "divix_ecommerce";

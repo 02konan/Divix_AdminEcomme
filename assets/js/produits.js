@@ -347,11 +347,30 @@ function afficheproduits(produits) {
                 : "./uploads/produits/default_1.png";
             const statutClass = pdt.statut === 'En stock' ? 'active' : pdt.statut === 'St. faible' ? 'pending' : 'disabled';
             const statutText = pdt.statut;
+
+            const isReduct = pdt.reduction_id ? true : false;
+            let pourcentage = '';
+            let nouveauPrix = pdt.prix;
+
+            if (isReduct) {
+                if (pdt.reduction_type == 'pourcentage') {
+                    pourcentage = pdt.reduction_valeur;
+                    nouveauPrix = pdt.prix * (1 - pdt.reduction_valeur / 100);
+                } else if (pdt.reduction_type == 'montant') {
+                    pourcentage = ((pdt.reduction_valeur / pdt.prix) * 100).toFixed(0);
+                    nouveauPrix = Math.max(0, pdt.prix - pdt.reduction_valeur);
+                }
+                
+                // Arrondir par défaut (à l'inférieur)
+                nouveauPrix = Math.floor(nouveauPrix);
+            }
             
             const item = document.createElement("div");
             item.className = "col-12 col-sm-6 col-md-4 col-lg-3";
             item.innerHTML = `
                 <div class="product-card">
+                    ${isReduct ? '<span class="badge text-bg-danger rounded-pill px-2 py-1 reduction"> -'+parseInt(pourcentage)+'%</span>' : ''}
+                    ${isReduct ? '<span class="badge text-bg-warning rounded-pill px-2 py-1 reduction prix-reduct"> '+parseInt(nouveauPrix)+' FCFA</span>' : ''}
                     <div class="like" data-product-id="${pdt.id}" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDetails" aria-controls="offcanvasRight">
                         <i class='bx bx-dots-vertical-rounded'></i>
                     </div>
@@ -691,6 +710,36 @@ function populateOffcanvasDetails(data) {
                     <p class="m-0 fw-semibold">${produit.stock ?? 0}</p>
                 </div>
             </div>
+            <hr class="m-0">
+            <form id="form_reduction">
+                <p class="text-muted small m-0 mb-3">Réduction</p>
+                <input type="hidden" name="produit_reduction_id" id="produit_reduction_id" value="${produit.id}">
+                <div class="d-flex gap-2">
+                    <div class="col mb-3">
+                        <label for="" class="form-label">Type <span class="small text-danger">*</span></label>
+                        <select name="type_reduction" id="type_reduction" class="form-select" required>
+                            <option value="" selected disabled>--Type--</option>
+                            <option value="pourcentage">Pourcentage</option>
+                            <option value="montant">Montant</option>
+                        </select>
+                    </div>
+                    <div class="col mb-3">
+                        <label for="" class="form-label">Valeur <span class="small text-danger">*</span></label>
+                        <input type="number" class="form-control" id="valeur_reduction" placeholder="" name="valeur_reduction" autocomplete="off" required>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="col mb-3">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" role="switch" name="active_reduction" id="active_reduction" checked>
+                            <label class="form-check-label" for="active_reduction">Active</label>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-sm btn-primary d-block" id="submit_reduction" >Reduire</button>
+                    </div>
+                </div>
+            </form>
         </div>
     `;
 
@@ -726,6 +775,52 @@ function populateOffcanvasDetails(data) {
                 event.target.checked = !checked;
             }
         });
+    }
+
+    let formReduction = document.getElementById('form_reduction');
+
+    if (formReduction) {
+        formReduction.addEventListener('submit', (e) => {
+            e.preventDefault()
+
+            const button = document.getElementById('submit_reduction');
+            
+            // Désactiver le bouton et montrer le loading
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner"></span><span>Reduction...</span>';
+
+            const formData = new FormData(formReduction);
+
+            // 🔧 Gérer le checkbox : 1 si coché, 0 sinon
+            const activeCheckbox = formReduction.querySelector('#active_reduction');
+            let activeValue = activeCheckbox && activeCheckbox.checked ? '1' : '0';
+            
+            formData.append('action', 'addReduction');
+            formData.append('active', activeValue);
+
+            fetch('./api/reduction.php', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', 'Réduction activée');
+                    button.disabled = false;
+                    button.innerHTML = '<span>Reduire</span>';
+                } else {
+                    showAlert('error', data.message || 'Erreur lors de la mise à jour.');
+                    button.disabled = false;
+                    button.innerHTML = '<span>Reduire</span>';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showAlert('error', 'Erreur lors de la mise à jour du statut.');
+                button.disabled = false;
+                button.innerHTML = '<span>Reduire</span>';
+            })
+
+        })
     }
 }
 
@@ -837,7 +932,8 @@ function populateModalForEdit(produit) {
     document.getElementById('produitCategorieLabel').value = produit.categorie;
     document.getElementById('produitSousCategorieId').value = produit.id_sous_categorie;
     document.getElementById('produitSousCategorieLabel').value = produit.sous_categorie;
-    document.getElementById('produitDescLabel').value = produit.description;
+    document.getElementById('produitDescLabel').value = produit.description.replace(/<br\s*\/?>\n?/gi, '\n');
+    document.getElementById('produitCaractLabel').value = produit.caracteristique.replace(/<br\s*\/?>\n?/gi, '\n');
     document.getElementById('produitPrixAchat').value = produit.prix;
     document.getElementById('produitStock').value = produit.stock;
     document.getElementById('produitStockMin').value = produit.seuil;

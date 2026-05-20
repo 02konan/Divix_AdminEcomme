@@ -281,6 +281,7 @@ function truncateText(text, maxLength) {
 
 const btnLivree = document.querySelector('#livree')
 const btnExpediee = document.querySelector('#expediee')
+const footerOffcanvas = document.getElementById('offcanvas-footer-commande')
 
 function populateOffcanvasDetails(data) {
     const commande = data.commande;
@@ -304,6 +305,14 @@ function populateOffcanvasDetails(data) {
 
     if (btnExpediee) {
         btnExpediee.dataset.commandeId = commande.id;
+    }
+    
+    if (footerOffcanvas) {
+        if (commande.statut !== "en_attente") {
+            footerOffcanvas.classList.add('d-none')
+        }else{
+            footerOffcanvas.classList.remove('d-none')
+        }
     }
 
     // Déterminer la classe et le libellé du statut
@@ -501,17 +510,55 @@ function populateOffcanvasDetails(data) {
     }
 }
 
-btnLivree.addEventListener('click', function() {
-    const commandeId = this.dataset.commandeId;
-    const statut = this.dataset.statut;
-
-    console.log(commandeId, statut);
-});
-
-function updateCommandesStatus(statut, commandeId) {
+// Remplacer l'écouteur actuel par ceci
+if (btnLivree) {
+    btnLivree.addEventListener('click', async function() {
+        const commandeId = this.dataset.commandeId;
+        const statut = this.dataset.statut; // Correction : date-statut devient dateStatut
+        console.log(commandeId, statut);
+        
+        if (commandeId && statut) {
+            await updateCommandesStatus(statut, commandeId);
+            
+            // Optionnel : rafraîchir la liste des commandes après mise à jour
+            // Et fermer l'offcanvas
+            Commandes();
+            
+            // Fermer l'offcanvas
+            const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasDetailsCommandes'));
+            if (offcanvas) {
+                offcanvas.hide();
+            }
+        }
+    });
+}
+// Écouteur pour le bouton Expédier
+if (btnExpediee) {
+    btnExpediee.addEventListener('click', async function() {
+        const commandeId = this.dataset.commandeId;
+        const statut = this.getAttribute('date-statut') || 'expediee'; // Récupère l'attribut date-statut
+        console.log(commandeId, statut);
+        
+        if (commandeId && statut) {
+            const success = await updateCommandesStatus(statut, commandeId);
+            
+            if (success) {
+                // Rafraîchir la liste des commandes
+                Commandes();
+                
+                // Fermer l'offcanvas
+                const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasDetailsCommandes'));
+                if (offcanvas) {
+                    offcanvas.hide();
+                }
+            }
+        }
+    });
+}
+async function updateCommandesStatus(statut, commandeId) {
     const formData = new FormData();
-    try{
-        formData.append('action', 'updateCommandesStatus');
+    try {
+        formData.append('action', 'updateCommandeStatus');
         formData.append('commande_id', commandeId);
         formData.append('statut', statut);
 
@@ -520,20 +567,17 @@ function updateCommandesStatus(statut, commandeId) {
             body: formData
         });
         const data = await response.json();
+        
         if (data.success) {
-            showAlert('success', 'Statut du produit mis à jour.');
-            if (badgeEl) {
-                badgeEl.textContent = checked ? 'Actif' : 'Inactif';
-                badgeEl.className = `status-badge ${checked ? 'active' : 'disabled'}`;
-            }
-            event.target.nextElementSibling.textContent = checked ? 'Oui' : 'Non';
+            showAlert('success', `Statut de la commande mis à jour : ${statut === 'livree' ? 'Livrée' : 'Expédiée'}`);
+            return true;
         } else {
-            showAlert('error', data.message || 'Impossible de mettre à jour.');
-            event.target.checked = !checked;
+            showAlert('error', data.message || 'Impossible de mettre à jour le statut.');
+            return false;
         }
     } catch (error) {
         console.error(error);
-        showAlert('error', 'Erreur lors de la mise à jour.');
-        event.target.checked = !checked;
+        showAlert('error', 'Erreur lors de la mise à jour du statut.');
+        return false;
     }
 }

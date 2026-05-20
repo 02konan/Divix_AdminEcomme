@@ -109,14 +109,14 @@ $path = $_SERVER['REQUEST_URI'];
         <nav class="navbar navbar-expand-lg navbar-mobile shadow">
            <div class="w-100 navbar-nav-box" id="">
                 <ul class="menu me-auto mb-2 mb-lg-0">
-                    <!-- <li class="nav-item">
+                    <li class="nav-item">
                         <a class="nav-link <?= linkActive(['commandes.php']) ?>" aria-current="page" href="./commandes.php">
                             <div class="icon-nav">
                                 <i class="bxf bx-receipt me-2"></i>
                             </div>
                             <span>Commandes</span>
                         </a>
-                    </li> -->
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link <?= linkActive(['produits.php']) ?>" aria-current="page" href="./produits.php">
                             <div class="icon-nav">
@@ -181,7 +181,7 @@ $path = $_SERVER['REQUEST_URI'];
                 </div>
                 <ul class="nav flex-column">
                     <!-- <li class="nav-item"><a href="./dashboard.php" class="nav-link <?= linkActive(['dashboard.php']) ?>"><i class="bxf bx-layers me-2"></i>Dashboard</a></li> -->
-                    <!-- <li class="nav-item"><a href="./commandes.php" class="nav-link <?= linkActive(['commandes.php']) ?>"><i class="bxf bx-receipt me-2"></i>Commandes <span class="badge ms-auto text-bg-danger" id="new_commandes">-</span></a></li> -->
+                    <li class="nav-item"><a href="./commandes.php" class="nav-link <?= linkActive(['commandes.php']) ?>"><i class="bxf bx-receipt me-2"></i>Commandes <span class="badge ms-auto text-bg-danger" id="new_commandes">-</span></a></li>
                     <!-- <li class="nav-item"><a href="./clients.php" class="nav-link <?= linkActive(['clients.php']) ?>"><i class="bxf bx-group me-2"></i>Clients</a></li> -->
                     <li class="nav-item"><a href="./produits.php" class="nav-link <?= linkActive(['produits.php']) ?>"><i class="bxf bx-shopping-bag me-2"></i>Produits</a></li>
                     <li class="nav-item"><a href="./bannieres.php" class="nav-link <?= linkActive(['bannieres.php']) ?>"><i class="bxf bx-card-view-large me-2"></i>Banniere</a></li>

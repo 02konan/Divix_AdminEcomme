@@ -7,11 +7,11 @@ ini_set('display_errors', 0);
 error_reporting(0);
 
 try {
-    $nom = isset($_POST['nom']) ? $_POST['nom'] : "Aurélien Sablé";
-    $email = isset($_POST['email']) ? $_POST['email'] : "aureliensable@yahoo.com";
+    $nom = isset($_POST['nom']) ? $_POST['nom'] : "Dorgeles Gnahore";
+    $email = isset($_POST['email']) ? $_POST['email'] : "dgmgnahore@gmail.com";
     $role = 1;
-    $password = isset($_POST['password']) ? $_POST['password'] : "1234";
-    $telephone = isset($_POST['telephone']) ? $_POST['telephone'] : "0779307804";
+    $password = isset($_POST['password']) ? $_POST['password'] : "0000";
+    $telephone = isset($_POST['telephone']) ? $_POST['telephone'] : "0789147958";
 
     
     if (empty($email) || empty($password) || empty($nom) || empty($telephone)) {
