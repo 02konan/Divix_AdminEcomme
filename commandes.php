@@ -1,5 +1,5 @@
 <?php include('./includes/header.php') ?>
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasDetailsCommandes">
+<div class="offcanvas details offcanvas-end" tabindex="-1" id="offcanvasDetailsCommandes">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title">Détails commande</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -28,32 +28,6 @@
         <!-- Modifiez cette ligne dans commandes.php -->
         <button class="btn btn-sm btn-primary d-flex align-items-center me-auto" id="expediee" data-commande-id="" data-statut="expediee"><i class="bx bx-box-alt me-2"></i>Expédier</button>        </div>
     </div>
-    <form action="" id="form_reduction">
-        <input type="hidden" name="produit_reduction_id" id="produit_reduction_id">
-        <div class="d-flex gap-2">
-            <div class="col mb-3">
-                <label for="" class="form-label">Type <span class="small text-danger">*</span></label>
-                <select name="type_reduction" id="type_reduction" class="form-select">
-                    <option value="" selected disabled>--Type--</option>
-                    <option value="pourcentage">Pourcentage</option>
-                    <option value="montant">Montant</option>
-                </select>
-            </div>
-            <div class="col mb-3">
-                <label for="" class="form-label">Valeur <span class="small text-danger">*</span></label>
-                <input type="number" class="form-control" id="valeur_reduction" placeholder="" name="valeur_reduction" autocomplete="off" required>
-            </div>
-        </div>
-        <div class="col mb-3">
-            <label for="" class="form-label">Type <span class="small text-danger">*</span></label>
-            <select name="type_reduction" id="type_reduction" class="form-select">
-                <option value="" selected disabled>--Type--</option>
-                <option value="pourcentage">Pourcentage</option>
-                <option value="montant">Montant</option>
-            </select>
-        </div>
-        <button type="submit" id="submit_reduction"></button>
-    </form>
 </div>
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg">

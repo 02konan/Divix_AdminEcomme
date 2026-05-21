@@ -1109,6 +1109,10 @@ table thead th{
         width: 80% !important;
         background: linear-gradient(-120deg, #3d6dff,  #1e2a92);
     }
+    .offcanvas.details{
+        color: var(--text-color);
+        background: #FFFFFF;
+    }
     .offcanvas .nav-link{
         color: var(--white);
     }
@@ -1132,6 +1136,14 @@ table thead th{
     }
     .offcanvas-header{
         border-bottom: 1.5px solid #6189ff;
+    }
+    #offcanvasDetailsCommandes{
+        width: 100% !important;
+    }#offcanvasDetailsCommandes .details-produit-tale{
+        width: 100% !important;
+    }
+    .offcanvas.details .offcanvas-header{
+        border-bottom: 1.5px solid var(--light-grey);
     }
     .logo-offcanvas{
         object-fit: cover;height: 25px;

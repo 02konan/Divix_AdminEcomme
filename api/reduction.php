@@ -17,6 +17,9 @@ try {
         case 'addReduction':
             addReduction();
             break;
+        case 'annuleReduction':
+            annuleReduction();
+            break;
         default:
             throw new Exception("Action inconnue!");
     }
@@ -105,6 +108,50 @@ function addReduction() {
         echo json_encode([
             'success' => true,
             'message' => 'Réduction effectuée avec succès.'
+        ]);
+        return;
+    } catch (Exception $e) {
+        header('Content-Type: application/json');
+        error_log($e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+        return;
+    }
+}
+function annuleReduction() {
+    global $bd;
+
+    try {
+        $produit_id = trim($_POST['id'] ?? '');
+        if (!$produit_id) {
+            throw new Exception('L\'ID du produit est requis.');
+        }
+
+        // D'abord, récupérer l'ID de la réduction active pour ce produit
+        $stmt = $bd->prepare('
+            SELECT r.id 
+            FROM reductions r 
+            INNER JOIN reduction_produits rp ON r.id = rp.id_reduction 
+            WHERE rp.id_produit = ? AND r.actif = 1 
+            LIMIT 1
+        ');
+        $stmt->execute([$produit_id]);
+        $reduction = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$reduction) {
+            throw new Exception('Aucune réduction active trouvée pour ce produit.');
+        }
+
+        // Désactiver la réduction
+        $update = $bd->prepare('UPDATE reductions SET actif = 0, date_modification = NOW() WHERE id = ?');
+        $update->execute([$reduction['id']]);
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Réduction annulée avec succès.'
         ]);
         return;
     } catch (Exception $e) {

@@ -1,6 +1,6 @@
 <?php include('./includes/header.php') ?>
 
-<div class="offcanvas border-0 shadow offcanvas-end" tabindex="-1" id="offcanvasDetails" aria-labelledby="offcanvasRightLabel">
+<div class="offcanvas border-0 shadow offcanvas-end details" tabindex="-1" id="offcanvasDetails" aria-labelledby="offcanvasRightLabel">
     <div class="offcanvas-header border-bottom">
         <div class="d-flex align-items-center gap-2">
             <h5 class="offcanvas-title m-0" id="offcanvasRightLabel">Détails du produit</h5>
@@ -66,10 +66,17 @@
                         <textarea class="form-control" id="produitDescLabel" placeholder="Tapez la description du produit" name="description" autocomplete="off" required></textarea>
                     </div>
                 </div>
-                <div class="d-flex gap-2">
+                <!-- <div class="d-flex gap-2">
                     <div class="col mb-3">
                         <label for="produitCaractLabel" class="form-label">Caractéristique</label>
                         <textarea class="form-control" id="produitCaractLabel" placeholder="Tapez les caractéristiques du produit" name="caracteristique" autocomplete="off"></textarea>
+                    </div>
+                </div> -->
+                <div class="form-section">
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-primary" id="addCarac">
+                            <i class="bi bi-plus-circle me-2"></i> Caractéristique
+                        </button>
                     </div>
                 </div>
             </fieldset>

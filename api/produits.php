@@ -29,6 +29,9 @@ try {
         case 'getProduitDetails':
             getProduitDetails();
             break;
+        case 'getProduitCaracteristiques':
+            getProduitCaracteristiques();
+            break;
         case 'deleteProduitImage':
             deleteProduitImage();
             break;
@@ -233,10 +236,12 @@ function addProduit() {
         $categorieId = trim($_POST['categorie'] ?? '');
         $sousCategorieId = trim($_POST['sous_categorie'] ?? '');
         $description = trim($_POST['description'] ? nl2br($_POST['description']) : '');
-        $caracteristique = $_POST['caracteristique'] ? trim(nl2br($_POST['caracteristique'])) : null;
         $prixVente = isset($_POST['prix_vente']) ? trim($_POST['prix_vente']) : '';
         $stock = isset($_POST['stock']) ? intval($_POST['stock']) : 0;
         $seuil = isset($_POST['stock_min']) ? intval($_POST['stock_min']) : 0;
+
+        $titre_carac = $_POST['titre_caract'] ?? [];
+        $valeur_carac = $_POST['valeur_caract'] ?? [];
 
         if (!$nom) {
             throw new Exception('Le nom du produit est requis.');
@@ -261,13 +266,12 @@ function addProduit() {
 
         $code = genererCodeProduit();
 
-        $stmt = $bd->prepare('INSERT INTO produits (code, nom, prix, description, caracteristique, stock, seuil, id_sous_categorie) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt = $bd->prepare('INSERT INTO produits (code, nom, prix, description, stock, seuil, id_sous_categorie) VALUES (?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
             $code,
             $nom,
             $prixVente,
             $description,
-            $caracteristique,
             $stock,
             $seuil,
             $sousCategorieId
@@ -275,6 +279,21 @@ function addProduit() {
 
         $produitId = $bd->lastInsertId();
 
+        // Insertion des caractéristiques - CORRECTION ICI
+        if (!empty($titre_carac) && is_array($titre_carac)) {
+            $insertCaracteristiques = $bd->prepare('INSERT INTO caracteristiques (titre, valeur, id_produit) VALUES (?, ?, ?)');
+            for ($i = 0; $i < count($titre_carac); $i++) {
+                if (!empty($titre_carac[$i]) && !empty($valeur_carac[$i])) {
+                    $insertCaracteristiques->execute([
+                        htmlspecialchars($titre_carac[$i]),
+                        htmlspecialchars($valeur_carac[$i]),
+                        $produitId
+                    ]);
+                }
+            }
+        }
+
+        // Le reste du code pour les images...
         $hasPrimaryImage = false;
         $uploadDir = __DIR__ . '/../uploads/produits/';
         if (!is_dir($uploadDir)) {
@@ -493,6 +512,38 @@ function getProduitImages() {
         ]);
     }
 }
+function getProduitCaracteristiques() {
+    global $bd;
+    
+    try {
+        $produitId = isset($_POST['produit_id']) ? intval($_POST['produit_id']) : 0;
+        if (!$produitId) {
+            throw new Exception('ID du produit requis.');
+        }
+        
+        $caracteristiques = [];
+        
+        // Vérifier si la table caracteristiques existe
+        if (tableExists('caracteristiques')) {
+            $stmt = $bd->prepare('SELECT id, titre, valeur FROM caracteristiques WHERE id_produit = ? ORDER BY id ASC');
+            $stmt->execute([$produitId]);
+            $caracteristiques = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'caracteristiques' => $caracteristiques
+        ]);
+    } catch (Exception $e) {
+        header('Content-Type: application/json');
+        error_log($e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+}
 
 function updateProduit() {
     global $bd;
@@ -533,7 +584,27 @@ function updateProduit() {
         if (!$sousCategorieId) {
             $sousCategorieId = getOrCreateSousCategorieId($sousCategorieLabel, $categorieId ?: null);
         }
-        
+        // Mise à jour des caractéristiques - Supprimer les anciennes et ajouter les nouvelles
+        $titre_carac = $_POST['titre_caract'] ?? [];
+        $valeur_carac = $_POST['valeur_caract'] ?? [];
+
+        // Supprimer les anciennes caractéristiques
+        $stmt = $bd->prepare('DELETE FROM caracteristiques WHERE id_produit = ?');
+        $stmt->execute([$editId]);
+
+        // Insérer les nouvelles caractéristiques
+        if (!empty($titre_carac) && is_array($titre_carac)) {
+            $insertCaracteristiques = $bd->prepare('INSERT INTO caracteristiques (titre, valeur, id_produit) VALUES (?, ?, ?)');
+            for ($i = 0; $i < count($titre_carac); $i++) {
+                if (!empty($titre_carac[$i]) && !empty($valeur_carac[$i])) {
+                    $insertCaracteristiques->execute([
+                        htmlspecialchars($titre_carac[$i]),
+                        htmlspecialchars($valeur_carac[$i]),
+                        $editId
+                    ]);
+                }
+            }
+        }
         $stmt = $bd->prepare('UPDATE produits SET 
             nom = ?, 
             prix = ?, 

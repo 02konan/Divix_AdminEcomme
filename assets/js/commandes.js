@@ -448,7 +448,7 @@ function populateOffcanvasDetails(data) {
                 
                 produitsHtml += `
                     <tr>
-                        <td>
+                        <td data-label="Produit">
                             <div class="d-flex align-items-center details-produit-tale gap-2">
                                 ${produit.image ? `
                                     <img src="${imageUrl}" alt="${produit.produit_nom}" 
@@ -466,9 +466,9 @@ function populateOffcanvasDetails(data) {
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center">${quantite}</td>
-                        <td class="text-end">${prixUnitaire.toLocaleString('fr-FR')} F</td>
-                        <td class="text-end fw-semibold">${totalLigne.toLocaleString('fr-FR')} F</td>
+                        <td data-label="Quantité" class="text-center action">${quantite}</td>
+                        <td data-label="P. unitaire" class="text-end action">${prixUnitaire.toLocaleString('fr-FR')} F</td>
+                        <td data-label="Total" class="text-end fw-semibold action">${totalLigne.toLocaleString('fr-FR')} F</td>
                     </tr>
                 `;
             });
