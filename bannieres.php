@@ -18,7 +18,7 @@
 
       <div class="modal-body">
         <form method="post" enctype="multipart/form-data" id="bannerForm" class="vstack gap-2">
-
+            <input type="hidden" id="banner_edit_id" name="banner_id" value="">
             <fieldset>
                 <legend>Informations générales</legend>
                 <div class="mb-3">
@@ -34,6 +34,7 @@
                         <label for="bannerType" class="form-label">Type <span class="small text-danger">*</span></label>
                         <select class="form-select" id="bannerType" name="type" required>
                             <option value="" selected disabled>--choisir--</option>
+                            <option value="a_la_une">À la une</option>
                             <option value="banner">Bannière</option>
                             <option value="event">Événement</option>
                             <option value="promo">Promotion</option>
@@ -46,6 +47,17 @@
                     </div>
                 </div>
             </fieldset>
+            
+            <fieldset class="banner-produit-field" style="display: none;">
+                <legend>Produit lié</legend>
+                <div class="mb-3">
+                    <label for="bannerProduit" class="form-label">Produit <span class="small text-danger">*</span></label>
+                    <select class="form-select" id="bannerProduit" name="id_produit">
+                        <option value="" selected disabled>-- Choisir un produit --</option>
+                    </select>
+                    <div class="form-text">Sélectionnez le produit à mettre en avant</div>
+                </div>
+            </fieldset>
 
             <fieldset class="banner-description-field">
                 <legend>Description</legend>
@@ -53,13 +65,12 @@
                     <textarea class="form-control" id="bannerDescription" name="description" rows="3" placeholder="Description de la bannière"></textarea>
                 </div>
             </fieldset>
-
             <fieldset class="banner-image-field">
                 <legend>Visuel</legend>
                 <div class="mb-3">
                     <label for="bannerImage" class="form-label">Image <span class="small text-danger banner-image-required">*</span></label>
                     <input type="file" class="form-control" id="bannerImage" name="image" accept="image/*">
-                    <div class="form-text">Format recommandé: 1200x628px</div>
+                    <div class="form-text">Format recommandé: 1920x1080px (16:9)</div>
                 </div>
                 <div id="bannerImagePreview" class="mb-3 d-none">
                     <img src="" alt="Aperçu" class="img-fluid rounded" style="max-height: 200px;">
@@ -174,7 +185,7 @@
         <div class="text-center py-5 text-muted">Sélectionnez une bannière pour voir ses détails.</div>
     </div>
     <div class="p-3 border-top d-flex gap-2">
-        <button class="btn btn-sm btn-primary d-flex align-items-center" id="offcanvasDetailsEditBtn"><i class='bx bx-edit me-1'></i>Modifier</button>
+        <button class="btn btn-sm btn-primary d-flex align-items-center" data-id="" id="bannerEditBtn"><i class='bx bx-edit me-1'></i>Modifier</button>
     </div>
 </div>
 

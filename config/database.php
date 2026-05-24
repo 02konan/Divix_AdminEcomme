@@ -1,13 +1,16 @@
 <?php
 
-// $host = "localhost";        // ex: mysql.xxxx.com
-// $dbname = "divix_ecommerce";
-// $username = "root";
-// $password = "";
-$host = "mysql-divix.alwaysdata.net";        // ex: mysql.xxxx.com
-$dbname = "divix_ecommerce";
-$username = "divix_ecommerce";
-$password = "divix_Ecommerce#2025";
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->load();
+
+
+$host = $_ENV['DB_HOST'];
+$dbname   = $_ENV['DB_NAME'];
+$username = $_ENV['DB_USER'];
+$password = $_ENV['DB_PASS'];
 
 try {
     $bd = new PDO(

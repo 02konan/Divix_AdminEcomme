@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     initBannerForm();
     initBannerDetailsOffcanvas();
+    initBannerModalReset();
     
     // Cacher la pagination flottante au départ
     const floatPag = document.getElementById("floatPag");
@@ -73,6 +74,7 @@ function chargerBannieres() {
         showBannerListError('Erreur serveur lors du chargement des bannières.');
     });
 }
+
 function showBannerListError(message) {
     const listContainer = document.getElementById('banners-list');
     if (!listContainer) return;
@@ -105,11 +107,13 @@ function afficheBannieres(bannieres) {
         bannieres.forEach(banner => {
             const typeClass = banner.type === 'banner' ? 'primary' : 
                             banner.type === 'event' ? 'info' : 
-                            banner.type === 'promo' ? 'warning' : 'secondary';
+                            banner.type === 'promo' ? 'warning' : 
+                            banner.type === 'marquee' ? 'secondary' : 'success';
             
             const typeLabel = banner.type === 'banner' ? 'Bannière' : 
                             banner.type === 'event' ? 'Événement' : 
-                            banner.type === 'promo' ? 'Promotion' : 'Défilant';
+                            banner.type === 'promo' ? 'Promotion' : 
+                            banner.type === 'marquee' ? 'Défilant' : 'À la une';
 
             const imageSrc = banner.image 
                 ? (/^https?:\/\//i.test(banner.image) ? banner.image : `./uploads/bannieres/${banner.image}`)
@@ -123,7 +127,7 @@ function afficheBannieres(bannieres) {
             item.className = "col-12 col-md-6 col-lg-4";
             item.innerHTML = `
                 <div class="card banner-card h-100 border-0 shadow-sm overflow-hidden">
-                    <div class="position-relative" style="height: 180px; overflow: hidden;">
+                    <div class="position-relative" style="aspect-ratio: 16 / 9 !important; overflow: hidden;">
                         <img src="${imageSrc}" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="${escapeHtml(banner.titre)}">
                         <div class="position-absolute top-0 start-0 m-2">
                             ${statusBadge}
@@ -141,10 +145,7 @@ function afficheBannieres(bannieres) {
                         </div>
                         <hr class="my-2">
                         <div class="d-flex gap-2">
-                            <!--<div class="form-check form-switch mt-auto me-auto">
-                                <input class="form-check-input" type="checkbox" role="switch" id="switchCheckChecked${banner.id}" data-id="${banner.id}" ${banner.active === 1 ? 'checked' : ''}>
-                                <label class="form-check-label" for="switchCheckChecked${banner.id}">Active</label>
-                            </div>-->
+                            ${banner.type === 'a_la_une' && banner.produit_nom ? `<span class="small text-muted">Produit: ${escapeHtml(banner.produit_nom.substring(0, 20))}</span>` : ''}
                             <div class="d-flex gap-1 align-items-center ms-auto">
                                 <i class="bx bx-calendar-x me-1"></i><span class="small text-muted">${banner.date_fin ? new Date(banner.date_fin).toLocaleDateString('fr-FR') : "Illimité"}</span>
                             </div>
@@ -230,12 +231,184 @@ function changePage(page) {
 }
 
 function escapeHtml(value) {
+    if (!value) return '';
     return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function resetBannerModalForm() {
+    const bannerForm = document.getElementById('bannerForm');
+    if (bannerForm) {
+        bannerForm.reset();
+    }
+    
+    const modalTitle = document.querySelector('#bannerModal .modal-header h1.modal-title');
+    const subTitle = document.querySelector('#bannerModal .modal-header span.small');
+    if (modalTitle) modalTitle.textContent = 'Nouvelle Bannière';
+    if (subTitle) subTitle.textContent = "Formulaire d'ajout de bannière";
+    
+    const editId = document.getElementById('banner_edit_id');
+    if (editId) editId.value = '';
+    
+    const imagePreview = document.getElementById('bannerImagePreview');
+    if (imagePreview) imagePreview.classList.add('d-none');
+    
+    const imageInput = document.getElementById('bannerImage');
+    if (imageInput) imageInput.required = false;
+    
+    const produitSelect = document.getElementById('bannerProduit');
+    if (produitSelect) produitSelect.innerHTML = '<option value="" selected disabled>-- Choisir un produit --</option>';
+    
+    updateFormFieldsVisibility('');
+}
+
+function initBannerModalReset() {
+    const modal = document.getElementById('bannerModal');
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', () => {
+            resetBannerModalForm();
+        });
+        
+        modal.addEventListener('show.bs.modal', () => {
+            const editId = document.getElementById('banner_edit_id').value;
+            if (!editId) {
+                resetBannerModalForm();
+            }
+        });
+    }
+}
+
+// Fonction pour charger les produits pour le type "a_la_une"
+async function loadProduitsForBanner() {
+    try {
+        const formData = new FormData();
+        formData.append('action', 'getProduitsForBanner');
+        
+        const response = await fetch('./api/bannieres.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            const produitSelect = document.getElementById('bannerProduit');
+            if (produitSelect) {
+                produitSelect.innerHTML = '<option value="" selected disabled>-- Choisir un produit --</option>';
+                data.data.forEach(produit => {
+                    const option = document.createElement('option');
+                    option.value = produit.id;
+                    option.textContent = `${produit.code || 'N/A'} - ${produit.nom} (${produit.prix} FCFA) - Stock: ${produit.stock}`;
+                    produitSelect.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Erreur chargement produits:', error);
+    }
+}
+
+function updateFormFieldsVisibility(type) {
+    const linkField = document.querySelector('.banner-link-field');
+    const descriptionField = document.querySelector('.banner-description-field');
+    const imageField = document.querySelector('.banner-image-field');
+    const datesField = document.querySelector('.banner-dates-field');
+    const produitField = document.querySelector('.banner-produit-field');
+    const imageInput = document.getElementById('bannerImage');
+    const lienInput = document.getElementById('bannerLien');
+    const produitSelect = document.getElementById('bannerProduit');
+
+    // Cacher tous les champs d'abord
+    [linkField, descriptionField, imageField, datesField, produitField].forEach(field => {
+        if (field) field.classList.remove('show');
+        if (field) field.style.display = 'none';
+    });
+
+    // Supprimer la validation required de l'image et du lien
+    if (imageInput) {
+        imageInput.required = false;
+    }
+    if (lienInput) {
+        lienInput.required = false;
+    }
+    if (produitSelect) {
+        produitSelect.required = false;
+    }
+
+    // Afficher les champs selon le type
+    switch(type) {
+        case 'banner':
+            // Tous les champs pour banner
+            if (linkField) {
+                linkField.classList.add('show');
+                linkField.style.display = 'block';
+            }
+            if (descriptionField) {
+                descriptionField.classList.add('show');
+                descriptionField.style.display = 'block';
+            }
+            if (imageField) {
+                imageField.classList.add('show');
+                imageField.style.display = 'block';
+            }
+            if (datesField) {
+                datesField.classList.add('show');
+                datesField.style.display = 'block';
+            }
+            if (imageInput && !document.getElementById('banner_edit_id').value) imageInput.required = true;
+            break;
+
+        case 'promo':
+        case 'event':
+            // Titre, image, dates pour promo et event
+            if (imageField) {
+                imageField.classList.add('show');
+                imageField.style.display = 'block';
+            }
+            if (datesField) {
+                datesField.classList.add('show');
+                datesField.style.display = 'block';
+            }
+            if (imageInput && !document.getElementById('banner_edit_id').value) imageInput.required = true;
+            break;
+
+        case 'marquee':
+            // Titre et dates seulement pour marquee
+            if (datesField) {
+                datesField.classList.add('show');
+                datesField.style.display = 'block';
+            }
+            break;
+            
+        case 'a_la_une':
+            // Pour "À la une" : titre, description, produit, dates
+            if (descriptionField) {
+                descriptionField.classList.add('show');
+                descriptionField.style.display = 'block';
+            }
+            if (produitField) {
+                produitField.classList.add('show');
+                produitField.style.display = 'block';
+            }
+            if (datesField) {
+                datesField.classList.add('show');
+                datesField.style.display = 'block';
+            }
+            if (produitSelect) produitSelect.required = true;
+            // Charger les produits si ce n'est pas déjà fait
+            if (produitSelect && produitSelect.options.length <= 1) {
+                loadProduitsForBanner();
+            }
+            break;
+
+        default:
+            // Rien de sélectionné, tout caché
+            break;
+    }
 }
 
 function initBannerForm() {
@@ -247,8 +420,9 @@ function initBannerForm() {
 
     // Gestion de la visibilité des champs selon le type
     if (typeSelect) {
-        typeSelect.addEventListener('change', (e) => {
-            updateFormFieldsVisibility(e.target.value);
+        typeSelect.addEventListener('change', async (e) => {
+            const selectedType = e.target.value;
+            updateFormFieldsVisibility(selectedType);
         });
     }
 
@@ -258,7 +432,10 @@ function initBannerForm() {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    imagePreview.querySelector('img').src = event.target.result;
+                    const previewImg = imagePreview.querySelector('img');
+                    if (previewImg) {
+                        previewImg.src = event.target.result;
+                    }
                     imagePreview.classList.remove('d-none');
                 };
                 reader.readAsDataURL(file);
@@ -272,9 +449,14 @@ function initBannerForm() {
 
             // Mettre à jour la validation required selon le type avant la soumission
             const selectedType = typeSelect ? typeSelect.value : '';
-            const imageInput = document.getElementById('bannerImage');
             if (imageInput) {
-                imageInput.required = ['banner', 'promo', 'event'].includes(selectedType);
+                const isEdit = document.getElementById('banner_edit_id').value !== '';
+                // En mode édition, l'image n'est requise que si on veut la changer
+                if (!isEdit) {
+                    imageInput.required = ['banner', 'promo', 'event'].includes(selectedType);
+                } else {
+                    imageInput.required = false;
+                }
             }
 
             if (!form.reportValidity()) {
@@ -287,7 +469,9 @@ function initBannerForm() {
 
             try {
                 const formData = new FormData(form);
-                formData.append('action', 'addBanniere');
+                const editId = document.getElementById('banner_edit_id').value;
+                const action = editId ? 'updateBanniere' : 'addBanniere';
+                formData.append('action', action);
 
                 const response = await fetch('./api/bannieres.php', {
                     method: 'POST',
@@ -300,15 +484,15 @@ function initBannerForm() {
                     Swal.fire({
                         icon: 'success',
                         title: 'Succès',
-                        text: data.message || 'Bannière ajoutée avec succès.',
+                        text: data.message || (editId ? 'Bannière modifiée avec succès.' : 'Bannière ajoutée avec succès.'),
                         confirmButtonColor: '#3d6dff',
                         timer: 1200
                     }).then(() => {
                         const modal = bootstrap.Modal.getInstance(document.getElementById('bannerModal'));
                         if (modal) modal.hide();
                         form.reset();
-                        imagePreview.classList.add('d-none');
-                        updateFormFieldsVisibility(''); // Réinitialiser la visibilité
+                        if (imagePreview) imagePreview.classList.add('d-none');
+                        resetBannerModalForm();
                         chargerBannieres();
                     });
                 } else {
@@ -335,53 +519,6 @@ function initBannerForm() {
     }
 }
 
-function updateFormFieldsVisibility(type) {
-    const linkField = document.querySelector('.banner-link-field');
-    const descriptionField = document.querySelector('.banner-description-field');
-    const imageField = document.querySelector('.banner-image-field');
-    const datesField = document.querySelector('.banner-dates-field');
-    const imageInput = document.getElementById('bannerImage');
-
-    // Cacher tous les champs d'abord
-    [linkField, descriptionField, imageField, datesField].forEach(field => {
-        if (field) field.classList.remove('show');
-    });
-
-    // Supprimer la validation required de l'image
-    if (imageInput) {
-        imageInput.required = false;
-    }
-
-    // Afficher les champs selon le type
-    switch(type) {
-        case 'banner':
-            // Tous les champs pour banner
-            if (linkField) linkField.classList.add('show');
-            if (descriptionField) descriptionField.classList.add('show');
-            if (imageField) imageField.classList.add('show');
-            if (datesField) datesField.classList.add('show');
-            if (imageInput) imageInput.required = true;
-            break;
-
-        case 'promo':
-        case 'event':
-            // Titre, image, dates pour promo et event
-            if (imageField) imageField.classList.add('show');
-            if (datesField) datesField.classList.add('show');
-            if (imageInput) imageInput.required = true;
-            break;
-
-        case 'marquee':
-            // Titre et dates seulement pour marquee
-            if (datesField) datesField.classList.add('show');
-            break;
-
-        default:
-            // Rien de sélectionné, tout caché
-            break;
-    }
-}
-
 function initBannerActions() {
     document.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('.delete-banner-btn');
@@ -390,12 +527,6 @@ function initBannerActions() {
             if (confirm('Êtes-vous sûr de vouloir supprimer cette bannière ?')) {
                 supprimerBanniere(bannerId);
             }
-        }
-
-        const editBtn = e.target.closest('.edit-banner-btn');
-        if (editBtn) {
-            const bannerId = editBtn.dataset.bannerId;
-            chargerBanniereDetails(bannerId);
         }
     });
 }
@@ -495,9 +626,25 @@ function populateBannerOffcanvas(banner) {
     if (!bodyEl) return;
 
     const imageSrc = banner.image ? (/^https?:\/\//i.test(banner.image) ? banner.image : `./uploads/bannieres/${banner.image}`) : './uploads/bannieres/default.png';
-    const typeLabel = banner.type === 'banner' ? 'Bannière' : banner.type === 'event' ? 'Événement' : banner.type === 'promo' ? 'Promotion' : 'Défilant';
+    const typeLabel = banner.type === 'banner' ? 'Bannière' : 
+                      banner.type === 'event' ? 'Événement' : 
+                      banner.type === 'promo' ? 'Promotion' : 
+                      banner.type === 'marquee' ? 'Défilant' : 'À la une';
+    
     const dateDebut = banner.date_debut ? new Date(banner.date_debut).toLocaleDateString('fr-FR') : 'Aucun';
     const dateFin = banner.date_fin ? new Date(banner.date_fin).toLocaleDateString('fr-FR') : 'Illimité';
+
+    let produitHtml = '';
+    if (banner.type === 'a_la_une' && banner.id_produit) {
+        produitHtml = `
+            <div>
+                <p class="text-muted small mb-1">Produit lié</p>
+                <p class="fw-semibold mb-0">${escapeHtml(banner.produit_nom || 'Produit #' + banner.id_produit)}</p>
+                ${banner.produit_prix ? `<p class="small text-muted mb-0">${banner.produit_prix} FCFA</p>` : ''}
+            </div>
+            <hr class="m-0">
+        `;
+    }
 
     bodyEl.innerHTML = `
         <div class="position-relative" style="height: 240px; overflow: hidden;">
@@ -511,17 +658,21 @@ function populateBannerOffcanvas(banner) {
             ${banner.description ? `
             <div>
                 <p class="text-muted small mb-1">Description</p>
-                <p class="small text-muted mb-0">${escapeHtml(banner.description)}</p>
+                <p class="fw-semibold mb-0">${escapeHtml(banner.description)}</p>
             </div>
             ` : ''}
+            ${produitHtml}
             <div class="row g-2">
                 <div class="col-6">
                     <p class="text-muted small mb-1">Type</p>
                     <span class="status-badge primary">${typeLabel}</span>
                 </div>
-                <div class="col-6 text-end">
-                    <p class="text-muted small mb-1">Activé</p>
-                    <p class="fw-semibold mb-0">${banner.active == 1 ? 'Oui' : 'Non'}</p>
+                <div class="col-6 d-flex flex-column text-end">
+                    <p class="text-muted small m-0 ms-auto">Activé</p>
+                    <div class="form-check form-switch ms-auto">
+                        <input class="form-check-input" type="checkbox" role="switch" id="offcanvasDetailsActiveSwitch" ${banner.active == 1 ? 'checked' : ''}>
+                        <label class="form-check-label" for="offcanvasDetailsActiveSwitch">${banner.active == 1 ? 'Oui' : 'Non'}</label>
+                    </div>
                 </div>
             </div>
             <div class="row g-2">
@@ -542,6 +693,54 @@ function populateBannerOffcanvas(banner) {
             ` : ''}
         </div>
     `;
+
+    // Gestion du switch d'activation dans l'offcanvas
+    const activeSwitch = document.getElementById('offcanvasDetailsActiveSwitch');
+    if (activeSwitch) {
+        activeSwitch.addEventListener('change', async (event) => {
+            const checked = event.target.checked;
+            try {
+                const formData = new FormData();
+                formData.append('action', 'updateBanniereStatus');
+                formData.append('banniere_id', banner.id);
+                formData.append('active', checked ? '1' : '0');
+
+                const response = await fetch('./api/bannieres.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('success', 'Statut de la bannière mis à jour.');
+                    if (badgeEl) {
+                        badgeEl.textContent = checked ? 'Actif' : 'Inactif';
+                        badgeEl.className = `status-badge ${checked ? 'active' : 'disabled'}`;
+                    }
+                    if (event.target.nextElementSibling) {
+                        event.target.nextElementSibling.textContent = checked ? 'Oui' : 'Non';
+                    }
+                    chargerBannieres(); // Recharger la liste
+                } else {
+                    showAlert('error', data.message || 'Impossible de mettre à jour.');
+                    event.target.checked = !checked;
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert('error', 'Erreur lors de la mise à jour.');
+                event.target.checked = !checked;
+            }
+        });
+    }
+
+    const editBannerBtn = document.getElementById('bannerEditBtn');
+    if (editBannerBtn) {
+        editBannerBtn.dataset.id = banner.id;
+        const newEditBtn = editBannerBtn.cloneNode(true);
+        editBannerBtn.parentNode.replaceChild(newEditBtn, editBannerBtn);
+        newEditBtn.addEventListener('click', () => {
+            populateModalForEdit(banner);
+        });
+    }
 }
 
 async function supprimerBanniere(bannerId) {
@@ -569,7 +768,57 @@ async function supprimerBanniere(bannerId) {
     }
 }
 
-async function chargerBanniereDetails(bannerId) {
-    // TODO: Implémenter le chargement des détails pour l'édition
-    console.log('Charger détails bannière:', bannerId);
+// Fonction pour peupler le modal avec les données de la bannière à modifier
+async function populateModalForEdit(banner) {
+    const modalTitle = document.querySelector('#bannerModal .modal-header h1.modal-title');
+    const subTitle = document.querySelector('#bannerModal .modal-header span.small');
+    
+    if (modalTitle) modalTitle.textContent = 'Modifier la Bannière';
+    if (subTitle) subTitle.textContent = "Formulaire de modification de bannière";
+    
+    document.getElementById('banner_edit_id').value = banner.id;
+    document.getElementById('bannerTitre').value = banner.titre;
+    document.getElementById('bannerDescription').value = banner.description || '';
+    document.getElementById('bannerType').value = banner.type;
+    document.getElementById('bannerLien').value = banner.lien || '';
+    document.getElementById('bannerActive').checked = banner.active == 1;
+    
+    // Charger les produits si nécessaire
+    if (banner.type === 'a_la_une') {
+        await loadProduitsForBanner();
+        if (banner.id_produit) {
+            document.getElementById('bannerProduit').value = banner.id_produit;
+        }
+    }
+    
+    if (banner.date_debut) {
+        document.getElementById('bannerDateDebut').value = banner.date_debut.replace(' ', 'T');
+    } else {
+        document.getElementById('bannerDateDebut').value = '';
+    }
+    
+    if (banner.date_fin) {
+        document.getElementById('bannerDateFin').value = banner.date_fin.replace(' ', 'T');
+    } else {
+        document.getElementById('bannerDateFin').value = '';
+    }
+    
+    // Afficher l'aperçu de l'image existante
+    const imagePreview = document.getElementById('bannerImagePreview');
+    const previewImg = imagePreview.querySelector('img');
+    const imageSrc = banner.image 
+        ? (/^https?:\/\//i.test(banner.image) ? banner.image : `./uploads/bannieres/${banner.image}`)
+        : './uploads/bannieres/default.png';
+    
+    if (previewImg) {
+        previewImg.src = imageSrc;
+    }
+    imagePreview.classList.remove('d-none');
+    
+    // Mettre à jour la visibilité des champs selon le type
+    updateFormFieldsVisibility(banner.type);
+    
+    // Ouvrir le modal
+    const modal = new bootstrap.Modal(document.getElementById('bannerModal'));
+    modal.show();
 }
